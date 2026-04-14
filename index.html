@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Basics - JORC LMS</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            light: '#d1fae5',
+                            DEFAULT: '#047857',
+                            dark: '#064e3b',
+                            gradient1: '#10b981',
+                            gradient2: '#059669'
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 40px -10px rgba(4, 120, 87, 0.08)',
+                        'glow': '0 0 20px rgba(16, 185, 129, 0.4)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+
+        body {
+            background: linear-gradient(-45deg, #f0fdf4, #e0f2fe, #ffffff, #d1fae5);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url('https://i.pinimg.com/736x/37/a6/73/37a673e7f2eed05eee53e552700410ac.jpg');
+            background-size: 520px auto;
+            background-repeat: repeat;
+            opacity: 0.07;
+            pointer-events: none;
+            z-index: 0;
+        }
+        body > * { position: relative; z-index: 1; }
+        @keyframes gradientBG {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .glass-header {
+            background: rgba(6, 78, 59, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .float-anim { animation: float 6s ease-in-out infinite; }
+        @keyframes float {
+            0%   { transform: translateY(0px); }
+            50%  { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .option-card input:checked + div {
+            border-color: #047857;
+            background-color: #ecfdf5;
+            box-shadow: 0 4px 15px rgba(4, 120, 87, 0.15);
+            transform: scale(1.01);
+        }
+        .option-card input:checked + div .custom-radio {
+            background-color: #047857;
+            border-color: #047857;
+        }
+        .option-card input:checked + div .custom-radio::after {
+            content: '';
+            width: 8px; height: 8px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .task-card input:checked + div {
+            border-color: #047857;
+            background-color: #ecfdf5;
+        }
+        .task-card input:checked + div .custom-check {
+            background-color: #047857;
+            border-color: #047857;
+        }
+        .task-card input:checked + div .custom-check::after {
+            content: '✓';
+            color: white;
+            font-size: 14px;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .loader {
+            border: 3px solid #f3f3f3; border-radius: 50%; border-top: 3px solid #047857;
+            width: 20px; height: 20px; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .wizard-step.hidden { display: none; }
+
+        /* NO COPY / NO SELECT — Assessment Screen */
+        #assessment-screen,
+        #wizard-steps-container,
+        #wizard-steps-container * {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+        }
+
+        /* RESULT OVERLAY — compact 80% viewport height */
+        #result-overlay {
+            align-items: center !important;
+        }
+        #result-slip {
+            max-height: 82vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        /* MOBILE RESPONSIVE FIXES */
+        @media (max-width: 767px) {
+            header {
+                flex-direction: row !important;
+                flex-wrap: wrap !important;
+                padding: 10px 14px !important;
+                gap: 8px !important;
+                margin-top: 8px !important;
+                border-radius: 14px !important;
+            }
+            header > div:first-child { gap: 10px !important; }
+            .logo-ring-wrap { width: 44px !important; height: 44px !important; flex-shrink: 0; }
+            header h1 { font-size: 13px !important; line-height: 1.2 !important; }
+            header p[data-i18n="app_subtitle"] { font-size: 10px !important; }
+            header > div:last-child { gap: 6px !important; }
+            #lang-selector { font-size: 11px !important; padding: 5px 10px 5px 26px !important; }
+            #user-display { padding: 4px 8px !important; gap: 6px !important; }
+            #user-display button { padding: 5px 8px !important; font-size: 11px !important; }
+            #header-username { font-size: 11px !important; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            main { padding-top: 100px !important; padding-left: 12px !important; padding-right: 12px !important; }
+            #login-screen { margin-top: 8px !important; border-radius: 20px !important; }
+            #login-screen > div.p-10 { padding: 24px 20px !important; }
+            #login-screen h2 { font-size: 22px !important; }
+            #login-screen p { font-size: 13px !important; margin-bottom: 20px !important; }
+            #btn-login { font-size: 15px !important; padding: 14px !important; }
+            #dashboard-screen h2[data-i18n="dashboard_title"] { font-size: 22px !important; }
+            #dashboard-screen p[data-i18n="dashboard_subtitle"] { font-size: 13px !important; }
+            #transcript-banner .bg-white { padding: 14px !important; gap: 12px !important; }
+            #transcript-banner p.text-2xl { font-size: 16px !important; }
+            #transcript-banner button { width: 100% !important; justify-content: center !important; }
+            #week-grid { gap: 14px !important; }
+            #assessment-screen { border-radius: 16px !important; }
+            #assessment-screen > div.bg-white.p-8 { padding: 14px 14px !important; gap: 10px !important; }
+            #quiz-title { font-size: 16px !important; line-height: 1.3 !important; }
+            #assessment-screen .p-10 { padding: 16px 14px !important; }
+            #assessment-screen .flex.justify-between.items-center.pt-10 {
+                flex-wrap: wrap !important; gap: 10px !important;
+                padding-top: 20px !important; margin-top: 20px !important;
+            }
+            #btn-next-step, #btn-submit-assessment, #btn-prev-step {
+                padding: 12px 18px !important; font-size: 13px !important;
+                width: 100% !important; justify-content: center !important;
+            }
+            #btn-prev-step { order: 2 !important; }
+            #btn-next-step, #btn-submit-assessment { order: 1 !important; }
+            .option-card > div, .task-card > div { padding: 10px 12px !important; font-size: 13px !important; }
+            #wizard-steps-container p.text-xl,
+            #wizard-steps-container p.text-2xl,
+            #wizard-steps-container h3 { font-size: 15px !important; line-height: 1.5 !important; }
+            #result-overlay { padding: 12px !important; align-items: flex-start !important; overflow-y: auto !important; }
+            #result-slip { border-radius: 18px !important; margin-top: 8px !important; }
+            #result-slip > div.bg-gradient-to-br { padding: 24px 16px !important; }
+            #result-slip > div.bg-gradient-to-br h2 { font-size: 20px !important; }
+            #result-slip > div.p-10 { padding: 20px 16px !important; }
+            #result-slip h3 { font-size: 18px !important; }
+            #result-slip .w-32.h-32 { width: 100px !important; height: 100px !important; }
+            #result-slip .text-5xl { font-size: 36px !important; }
+            #btn-download-result { font-size: 13px !important; padding: 12px !important; }
+            #transcript-overlay { padding: 8px !important; align-items: flex-start !important; overflow-y: auto !important; }
+            #transcript-slip { border-radius: 14px !important; margin-top: 4px !important; }
+            #transcript-slip .p-10 { padding: 16px 14px !important; }
+            #transcript-slip h1 { font-size: 18px !important; letter-spacing: 0.05em !important; }
+            #transcript-slip .text-2xl { font-size: 16px !important; }
+            #transcript-slip table th, #transcript-slip table td { padding: 10px 8px !important; font-size: 12px !important; }
+            #transcript-slip .h-32.w-32 { height: 90px !important; width: 90px !important; }
+            #transcript-slip #trans-grade { font-size: 36px !important; }
+            #btn-download-transcript { font-size: 13px !important; padding: 12px 16px !important; }
+            #admin-screen { overflow-x: auto !important; }
+            #admin-screen table { min-width: 700px !important; }
+            #admin-screen table th, #admin-screen table td { padding: 10px 8px !important; font-size: 11px !important; }
+            #admin-edit-modal > div { border-radius: 18px !important; }
+            #admin-edit-modal .p-8 { padding: 16px !important; }
+            #admin-edit-modal h3 { font-size: 16px !important; }
+            footer { font-size: 11px !important; padding: 16px 12px !important; }
+        }
+        @media (max-width: 380px) {
+            header h1 { font-size: 11px !important; }
+            header > div:first-child { gap: 6px !important; }
+            #header-username { display: none !important; }
+            main { padding-top: 90px !important; }
+        }
+
+        /* Rotating border effect around the new logo image */
+        .logo-ring-wrap {
+            position: relative; width: 60px; height: 60px; flex-shrink: 0;
+        }
+        .logo-ring-wrap .logo-inner {
+            position: absolute; inset: 4px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; z-index: 1; 
+            overflow: hidden; background: #ffffff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+        .logo-ring-wrap .logo-inner img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .logo-ring-wrap::before {
+            content: ''; position: absolute; inset: 0; border-radius: 50%;
+            background: conic-gradient(from 0deg, #10b981, #ffffff44, #10b981, #06402244, #10b981);
+            animation: spinRing 3s linear infinite; z-index: 0;
+        }
+        .logo-ring-wrap::after {
+            content: ''; position: absolute; inset: 2px; border-radius: 50%;
+            background: #064e3b; z-index: 0;
+        }
+        @keyframes spinRing { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Print styles */
+        @media print {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+            body {
+                background: #ffffff !important; background-image: none !important;
+                animation: none !important;
+                -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;
+            }
+            header {
+                position: relative !important; top: auto !important; left: auto !important;
+                right: auto !important; margin: 0 0 16px 0 !important;
+                border-radius: 0 !important; width: 100% !important; max-width: 100% !important;
+            }
+            .glass-panel, .glass-header {
+                background: #ffffff !important; backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important; border: 1px solid #e5e7eb !important;
+            }
+            main { padding-top: 8px !important; }
+            .bg-gradient-to-br, .bg-gradient-to-r {
+                -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            }
+            #login-screen, #dashboard-screen, #assessment-screen,
+            #admin-screen, #result-overlay, #transcript-overlay,
+            #admin-edit-modal { display: none !important; }
+            .blur-2xl, .blur-3xl { display: none !important; }
+            .glass-panel, .rounded-3xl { page-break-inside: avoid; }
+            button, [data-html2canvas-ignore] { display: none !important; }
+        }
+    </style>
+</head>
+<body class="text-gray-800 font-sans flex flex-col items-center">
+
+    <header class="glass-header text-white shadow-xl rounded-2xl w-full max-w-7xl mx-auto mt-4 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 fixed z-50 transition-all">
+        <div class="flex items-center gap-4">
+            <div class="logo-ring-wrap">
+                <div class="logo-inner">
+                    <img src="https://i.postimg.cc/brTF1zfC/Gemini_Generated_Image_nx1nhknx1nhknx1n.png" alt="JORC Logo">
+                </div>
+            </div>
+            <div class="flex flex-col items-center text-center">
+                <h1 class="text-xl font-bold tracking-tight" data-i18n="app_title">JORC Digital Literacy LMS</h1>
+                <p class="text-xs text-brand-light opacity-80 font-medium tracking-wide" data-i18n="app_subtitle">Computer Basics for Beginners</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div class="relative">
+                <i class="fa-solid fa-globe absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-dark text-sm"></i>
+                <select id="lang-selector" onchange="window.changeLanguage(this.value)" class="text-brand-dark font-semibold text-sm rounded-lg pl-8 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-light cursor-pointer bg-white shadow-sm border-0 appearance-none">
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                    <option value="yo">Yorùbá</option>
+                </select>
+            </div>
+            <div id="user-display" class="hidden flex items-center gap-3 bg-black bg-opacity-30 px-5 py-2 rounded-xl border border-white border-opacity-10">
+                <div id="sync-status" class="text-xs text-green-400" title="Data Synced"><i class="fa-solid fa-server"></i></div>
+                <div class="h-5 w-px bg-white opacity-20"></div>
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-light to-white flex items-center justify-center text-brand-dark font-bold shadow-sm">
+                        <i class="fa-solid fa-user text-sm"></i>
+                    </div>
+                    <span id="header-username" class="font-medium text-sm tracking-wide">Guest</span>
+                </div>
+                <button onclick="window.logout()" class="ml-2 flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold text-sm px-4 py-2 rounded-xl transition shadow" title="Logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span data-i18n="logout">Logout</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-7xl px-4 pt-32 pb-12 relative">
+
+        <div id="login-screen" class="max-w-md mx-auto glass-panel rounded-3xl shadow-soft overflow-hidden mt-12 border-t-4 border-brand fade-in relative">
+            <div class="absolute top-0 right-0 -mt-10 -mr-10 w-32 h-32 bg-brand opacity-10 rounded-full blur-2xl"></div>
+            <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-blue-500 opacity-10 rounded-full blur-2xl"></div>
+            <div class="p-6 md:p-10 relative z-10">
+                <div class="flex justify-center mb-6 float-anim">
+                    <div class="bg-gradient-to-br from-brand-light to-white p-5 rounded-2xl shadow-lg border border-white">
+                        <i class="fa-solid fa-id-card text-5xl text-brand"></i>
+                    </div>
+                </div>
+                <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-2 tracking-tight" data-i18n="login_title">Student Portal</h2>
+                <p class="text-center text-gray-500 mb-8 font-medium" data-i18n="login_subtitle">Enter your Student Code to load your progress.</p>
+                
+                <div id="resume-session-box" class="hidden mb-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-brand border-opacity-20 p-4 rounded-xl flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-brand text-white w-10 h-10 rounded-full flex items-center justify-center font-bold shadow-md">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black text-brand uppercase tracking-widest mb-0.5">Resume Session</p>
+                            <p id="resume-session-name" class="text-sm font-extrabold text-gray-800 leading-tight">John Doe</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="window.resumeSession()" class="bg-brand hover:bg-brand-dark text-white text-sm font-bold py-2 px-5 rounded-lg shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 flex items-center gap-2">
+                        Resume <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+                <div id="resume-session-divider" class="hidden flex items-center gap-3 mb-6">
+                    <div class="h-px bg-gray-200 flex-grow"></div>
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">OR</span>
+                    <div class="h-px bg-gray-200 flex-grow"></div>
+                </div>
+
+                <form id="login-form" onsubmit="window.handleLogin(event)">
+                    <div class="mb-5">
+                        <label class="block text-gray-700 text-sm font-bold mb-2 uppercase tracking-wider" for="student-name" data-i18n="label_name">Full Name</label>
+                        <input class="w-full bg-white bg-opacity-50 border-2 border-gray-200 rounded-xl py-3 px-4 text-gray-800 font-medium focus:outline-none focus:border-brand focus:bg-white transition-colors" id="student-name" type="text" placeholder="e.g. John Doe" required>
+                    </div>
+                    <div class="mb-8">
+                        <label class="block text-gray-700 text-sm font-bold mb-2 uppercase tracking-wider" for="student-code" data-i18n="label_code">Student ID Code</label>
+                        <input class="w-full bg-white bg-opacity-50 border-2 border-gray-200 rounded-xl py-3 px-4 text-gray-800 font-medium focus:outline-none focus:border-brand focus:bg-white transition-colors" id="student-code" type="text" placeholder="e.g. CB101" required>
+                    </div>
+                    <div class="flex items-center gap-3 mb-6 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                        <input type="checkbox" id="remember-me" class="w-5 h-5 text-brand rounded border-gray-300 focus:ring-brand cursor-pointer">
+                        <label for="remember-me" class="text-sm font-semibold text-gray-600 cursor-pointer select-none">
+                            <i class="fa-solid fa-cookie-bite text-amber-500 mr-1"></i> Remember me on this device
+                        </label>
+                    </div>
+                    <button id="btn-login" class="w-full bg-gradient-to-r from-brand to-brand-gradient1 hover:from-brand-dark hover:to-brand text-white font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-glow transition-all duration-300 transform hover:-translate-y-1 flex justify-center items-center gap-3 text-lg" type="submit">
+                        <span data-i18n="btn_start">Start Assessment</span> <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="admin-screen" class="hidden fade-in">
+            <div class="glass-panel rounded-3xl shadow-soft overflow-hidden mb-8 border border-white">
+                <div class="bg-gray-900 text-white p-8 flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-white opacity-5"></div>
+                    <div class="relative z-10 flex items-center gap-4">
+                        <div class="bg-white bg-opacity-10 p-4 rounded-xl backdrop-blur-sm">
+                            <i class="fa-solid fa-user-shield text-3xl text-brand-light"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-3xl font-extrabold tracking-tight">Admin Dashboard</h2>
+                            <p class="text-gray-400 font-medium">Global Student Progress Monitor (Supabase)</p>
+                        </div>
+                    </div>
+                    <div class="relative z-10 flex items-center gap-3 bg-black bg-opacity-40 p-2 rounded-xl backdrop-blur-sm border border-gray-700">
+                        <span class="text-sm font-semibold text-gray-300 px-3 hidden md:inline uppercase tracking-wider">Export:</span>
+                        <button onclick="window.exportSelected('pdf')" class="bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg shadow transition hover:-translate-y-1" title="Export to PDF">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </button>
+                        <button onclick="window.exportSelected('excel')" class="bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg shadow transition hover:-translate-y-1" title="Export to Excel">
+                            <i class="fa-solid fa-file-excel"></i>
+                        </button>
+                        <button onclick="window.exportSelected('word')" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg shadow transition hover:-translate-y-1" title="Export to Word">
+                            <i class="fa-solid fa-file-word"></i>
+                        </button>
+                        <div class="w-px h-8 bg-gray-600 mx-1"></div>
+                        <button onclick="window.refreshAdmin()" class="bg-brand hover:bg-brand-dark text-white px-5 py-3 rounded-lg font-bold shadow transition flex items-center gap-2 hover:-translate-y-1">
+                            <i class="fa-solid fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto bg-white bg-opacity-50">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-500 uppercase text-xs tracking-wider border-b-2 border-gray-200">
+                                <th class="p-5 w-12 text-center">
+                                    <input type="checkbox" id="selectAll" onclick="window.toggleSelectAll(this)" class="w-5 h-5 text-brand rounded border-gray-300 focus:ring-brand cursor-pointer">
+                                </th>
+                                <th class="p-5 font-bold">Student Name</th>
+                                <th class="p-5 font-bold">Code</th>
+                                <th class="p-5 text-center font-bold">Wk 1</th>
+                                <th class="p-5 text-center font-bold">Wk 2</th>
+                                <th class="p-5 text-center font-bold">Wk 3</th>
+                                <th class="p-5 text-center font-bold">Wk 4</th>
+                                <th class="p-5 text-center font-bold">Capstone</th>
+                                <th class="p-5 text-center font-bold">Status</th>
+                                <th class="p-5 text-center font-bold">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body" class="text-sm font-medium">
+                            </tbody>
+                    </table>
+                </div>
+                <div id="admin-loading" class="p-12 text-center text-brand font-bold hidden bg-white">
+                    <div class="loader mx-auto mb-4"></div> Loading student records from Supabase...
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-edit-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 z-[70] flex items-center justify-center p-4 backdrop-blur-md">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden fade-in relative">
+                <div class="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                        <div class="bg-brand text-white p-2 rounded-lg"><i class="fa-solid fa-user-pen"></i></div> Edit Student
+                    </h3>
+                    <button onclick="window.closeEditModal()" class="text-gray-400 hover:text-red-500 transition bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm hover:shadow"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <form id="admin-edit-form" onsubmit="window.saveStudentEdit(event)" class="p-8">
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Student Name</label>
+                        <input id="edit-name" type="text" class="border-2 border-gray-200 rounded-xl w-full py-3 px-4 font-medium focus:outline-none focus:border-brand" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Week 1 (0-10)</label>
+                            <input id="edit-w1" type="number" min="0" max="10" class="border-2 border-gray-200 rounded-lg w-full py-2 px-3 font-bold text-brand focus:outline-none focus:border-brand text-center">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Week 2 (0-10)</label>
+                            <input id="edit-w2" type="number" min="0" max="10" class="border-2 border-gray-200 rounded-lg w-full py-2 px-3 font-bold text-brand focus:outline-none focus:border-brand text-center">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Week 3 (0-10)</label>
+                            <input id="edit-w3" type="number" min="0" max="10" class="border-2 border-gray-200 rounded-lg w-full py-2 px-3 font-bold text-brand focus:outline-none focus:border-brand text-center">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Week 4 (0-10)</label>
+                            <input id="edit-w4" type="number" min="0" max="10" class="border-2 border-gray-200 rounded-lg w-full py-2 px-3 font-bold text-brand focus:outline-none focus:border-brand text-center">
+                        </div>
+                        <div class="col-span-2 mt-2">
+                            <label class="block text-xs font-bold text-purple-600 mb-1 uppercase">Capstone Project (0-50)</label>
+                            <input id="edit-w5" type="number" min="0" max="50" class="border-2 border-purple-200 rounded-lg w-full py-3 px-3 font-bold text-purple-700 focus:outline-none focus:border-purple-500 text-center text-lg">
+                            <p class="text-xs text-gray-400 mt-2 text-center">Leave empty to reset to "Not Taken".</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-4 mt-8">
+                        <button type="button" onclick="window.closeEditModal()" class="px-6 py-3 bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl transition font-bold">Cancel</button>
+                        <button type="submit" class="px-6 py-3 bg-brand hover:bg-brand-dark text-white rounded-xl font-bold transition shadow-lg hover:-translate-y-1">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="dashboard-screen" class="hidden fade-in">
+            <div id="transcript-banner" class="hidden bg-gradient-to-r from-yellow-400 to-yellow-500 p-1 rounded-2xl shadow-lg mb-10 transform transition hover:scale-[1.01]">
+                <div class="bg-white rounded-xl p-5 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="flex items-center gap-5">
+                        <div class="bg-yellow-100 p-4 rounded-full">
+                            <i class="fa-solid fa-trophy text-yellow-500 text-3xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-extrabold text-gray-800" data-i18n="course_completed">Course Completed!</p>
+                            <p class="text-gray-500 font-medium" data-i18n="course_completed_msg">You have mastered all modules. View your final report.</p>
+                        </div>
+                    </div>
+                    <button onclick="window.showFinalTranscript()" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-xl shadow-md transition whitespace-nowrap flex items-center gap-2" data-i18n="view_transcript">
+                        <i class="fa-solid fa-file-award"></i> View Final Transcript
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-10">
+                <h2 class="text-2xl md:text-4xl font-extrabold text-gray-900 tracking-tight mb-2" data-i18n="dashboard_title">My Learning Path</h2>
+                <p class="text-lg text-gray-600 font-medium" data-i18n="dashboard_subtitle">Select a module to begin your assessment.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="week-grid">
+                </div>
+        </div>
+
+        <div id="assessment-screen" class="hidden max-w-4xl mx-auto glass-panel rounded-3xl shadow-soft border border-white fade-in overflow-hidden relative">
+            <div class="bg-white p-8 border-b border-gray-100 flex flex-wrap justify-between items-center relative z-10 gap-2">
+                <div class="flex items-center gap-5">
+                    <div class="bg-brand-light p-4 rounded-2xl border border-white shadow-sm">
+                        <i class="fa-solid fa-laptop text-brand text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 id="quiz-title" class="text-xl md:text-3xl font-extrabold text-gray-800 tracking-tight">Week 1 Assessment</h2>
+                        <p class="text-gray-500 font-medium mt-1">
+                            <span class="uppercase text-xs font-bold text-brand mr-2" data-i18n="goal">GOAL</span>
+                            <span id="quiz-goal">Loading...</span>
+                        </p>
+                    </div>
+                </div>
+                <button onclick="window.loadDashboard()" class="text-gray-400 hover:text-red-500 transition bg-gray-50 hover:bg-red-50 p-4 rounded-xl" title="Exit Assessment">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="w-full bg-gray-100 h-2 relative z-10">
+                <div id="wizard-progress" class="bg-gradient-to-r from-brand to-green-400 h-2 transition-all duration-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" style="width:0%"></div>
+            </div>
+
+            <div class="p-4 md:p-10 relative z-10 bg-white bg-opacity-50">
+                <form id="quiz-form" onsubmit="window.submitAssessment(event)">
+                    <div id="wizard-steps-container" class="min-h-[300px]"></div>
+                    <div class="flex justify-between items-center pt-10 mt-10 border-t border-gray-200">
+                        <button type="button" id="btn-prev-step" onclick="window.prevStep()" class="bg-white border-2 border-gray-200 text-gray-700 hover:border-brand hover:text-brand font-bold py-3 px-6 rounded-xl transition-all flex items-center gap-3 hidden">
+                            <i class="fa-solid fa-arrow-left"></i> <span data-i18n="btn_prev">Previous</span>
+                        </button>
+                        <div class="flex-grow"></div>
+                        <button type="button" id="btn-next-step" onclick="window.nextStep()" class="bg-brand hover:bg-brand-dark text-white font-bold py-4 px-10 rounded-xl shadow-glow transition transform hover:-translate-y-1 flex items-center gap-3 text-lg">
+                            <span data-i18n="btn_next">Next Question</span> <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                        <button type="submit" id="btn-submit-assessment" class="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-extrabold py-4 px-10 rounded-xl shadow-lg transition transform hover:-translate-y-1 flex items-center gap-3 text-lg hidden">
+                            <span data-i18n="btn_submit">Submit Assessment</span> <i class="fa-solid fa-check-circle text-xl"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="result-overlay" class="hidden fixed inset-0 bg-gray-900 bg-opacity-70 z-[80] flex items-center justify-center p-4 backdrop-blur-md">
+            <div id="result-slip" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden relative fade-in border border-white">
+                <div class="bg-gradient-to-br from-brand to-brand-dark px-6 py-4 text-center text-white flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-medal text-3xl text-yellow-300 drop-shadow float-anim"></i>
+                    <h2 class="text-xl font-extrabold tracking-tight" data-i18n="result_title">Module Result</h2>
+                </div>
+                <div class="px-5 py-4 text-center bg-gray-50">
+                    <div class="flex items-center justify-between mb-3 bg-white rounded-xl px-4 py-2 border border-gray-100">
+                        <div class="text-left">
+                            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Student</p>
+                            <p id="res-name" class="text-base font-extrabold text-gray-900 leading-tight">Name</p>
+                        </div>
+                        <p id="res-code" class="text-sm font-mono font-bold text-brand bg-brand-light px-3 py-1 rounded-lg border border-brand border-opacity-20">CODE</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Module</p>
+                            <p id="res-week" class="font-extrabold text-gray-800 text-sm leading-tight">Week 1</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Status</p>
+                            <p id="res-status" class="font-extrabold text-green-600 text-sm">PASSED</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-center mb-3">
+                        <div class="w-24 h-24 rounded-full border-[7px] border-brand flex items-center justify-center shadow-inner bg-white">
+                            <div class="text-center">
+                                <span class="text-4xl font-black text-brand leading-none" id="res-score">8</span>
+                                <span class="text-base font-bold text-gray-400 block -mt-0.5" id="res-max">/ 10</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="res-message" class="text-sm font-medium text-gray-600 mb-4 bg-white py-2 px-3 rounded-xl border border-gray-200">Excellent work!</div>
+                    <div class="flex gap-2" data-html2canvas-ignore="true">
+                        <button onclick="window.printSlip('result-slip')" class="flex-1 bg-gray-900 hover:bg-black text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition text-sm">
+                            <i class="fa-solid fa-file-arrow-down"></i> <span data-i18n="download_pdf">Save PDF</span>
+                        </button>
+                        <button onclick="window.closeResult()" class="flex-1 bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-700 font-bold py-3 rounded-xl transition text-sm" data-i18n="close">
+                            Continue
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="transcript-overlay" class="hidden fixed inset-0 bg-gray-900 bg-opacity-80 z-[90] flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
+            <div id="transcript-slip" class="bg-white rounded-xl shadow-2xl max-w-[700px] w-full relative my-8 fade-in mx-auto">
+                <div class="p-5 md:p-10 relative bg-white rounded-xl flex flex-col border-[6px] md:border-[12px] border-double border-gray-100">
+                    <div class="text-center mb-10">
+                        <div class="inline-flex items-center justify-center mb-6 shadow-lg rounded-full overflow-hidden border-4 border-brand bg-white" style="width: 100px; height: 100px;">
+                            <img src="https://i.postimg.cc/brTF1zfC/Gemini_Generated_Image_nx1nhknx1nhknx1n.png" class="w-full h-full object-cover" alt="JORC Logo">
+                        </div>
+                        <h1 class="text-2xl md:text-4xl font-black text-gray-900 uppercase tracking-[0.1em] md:tracking-[0.2em]" data-i18n="transcript_title">Official Transcript</h1>
+                        <p class="text-brand font-bold mt-2 tracking-widest uppercase text-sm">JORC Digital Literacy LMS &mdash; Computer Basics for Beginners</p>
+                        <div class="w-32 h-1 bg-brand mx-auto mt-6 rounded-full"></div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-10 bg-gray-50 p-6 border border-gray-200 rounded-xl gap-4">
+                        <div class="text-center sm:text-left w-full sm:w-auto border-b sm:border-b-0 border-gray-200 pb-4 sm:pb-0">
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Student Name</p>
+                            <p id="trans-name" class="text-2xl font-extrabold text-gray-900">John Doe</p>
+                        </div>
+                        <div class="text-center sm:text-right w-full sm:w-auto">
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Student ID</p>
+                            <p id="trans-code" class="text-xl font-mono font-bold text-brand">CB101</p>
+                        </div>
+                    </div>
+                    <table class="w-full mb-10 border-collapse bg-white border border-gray-200 rounded-lg overflow-hidden">
+                        <thead>
+                            <tr class="bg-gray-800 text-white uppercase text-xs tracking-widest">
+                                <th class="p-4 text-left font-bold">Module Description</th>
+                                <th class="p-4 text-center font-bold">Score</th>
+                                <th class="p-4 text-center font-bold">Max</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trans-table-body" class="text-gray-700 font-medium text-sm"></tbody>
+                        <tfoot class="bg-brand-light font-bold border-t-4 border-brand">
+                            <tr>
+                                <td class="p-4 text-right uppercase tracking-widest text-brand-dark text-xs font-bold">Final Total Score:</td>
+                                <td class="p-4 text-center text-xl text-brand-dark font-black" id="trans-total">0</td>
+                                <td class="p-4 text-center text-lg text-brand-dark opacity-70">100</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <div class="flex-grow"></div>
+                    <div class="flex flex-col md:flex-row justify-between items-center md:items-end mt-8 pb-4 gap-6">
+                        <div class="text-center w-full md:w-1/3">
+                            <div class="border-b-2 border-gray-400 w-full mb-2 h-10"></div>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Instructor Signature</p>
+                        </div>
+                        <div class="w-full md:w-1/3 flex justify-center">
+                            <div class="border-4 border-yellow-500 bg-white rounded-full h-32 w-32 flex flex-col items-center justify-center font-bold shadow-lg">
+                                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Final Grade</span>
+                                <span id="trans-grade" class="text-5xl font-black text-gray-800 leading-none">A</span>
+                            </div>
+                        </div>
+                        <div class="text-center w-full md:w-1/3">
+                            <div id="trans-date" class="border-b-2 border-gray-400 w-full mb-2 text-gray-800 font-mono text-sm pb-1 h-8 flex items-end justify-center"></div>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Date Issued</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 flex flex-col md:flex-row justify-center gap-4 px-4 md:px-0 pb-6" data-html2canvas-ignore="true">
+                    <button id="btn-download-transcript" onclick="window.printSlip('transcript-slip')" class="bg-brand hover:bg-brand-dark text-white font-bold py-4 px-8 rounded-xl shadow-lg flex items-center gap-3 transition transform hover:-translate-y-1 text-lg">
+                        <i class="fa-solid fa-print"></i> <span>Print / Save PDF</span>
+                    </button>
+                    <button onclick="window.closeTranscript()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-4 px-8 rounded-xl shadow transition text-lg" data-i18n="close">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="mt-auto py-8 text-center text-gray-500 text-sm font-medium no-print glass-panel w-full relative z-10 border-t border-white">
+        <p>&copy; 2026 Jonah Otunla Resource Centre. All Rights Reserved.</p>
+        <p class="mt-2 text-xs font-bold text-brand uppercase tracking-widest"><i class="fa-solid fa-cloud mr-1"></i> Supabase Cloud Mode &mdash; Data Saved in Real-Time</p>
+    </footer>
+
+    <script>
+    'use strict';
+
+    // ═══════════════════════════════════════════════════════════════
+    // 1. SUPABASE CONFIG — PASTE YOUR VALUES HERE
+    // ═══════════════════════════════════════════════════════════════
+    const SUPABASE_URL      = 'https://cqhhperiylkikocdfxnf.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxaGhwZXJpeWxraWtvY2RmeG5mIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjA4ODA3NSwiZXhwIjoyMDkxNjY0MDc1fQ.o8nnntorGBHzps-1yP_3rWMigPu2m2LWwsNc8PFHoOs';
+
+    // Init Supabase client
+    const { createClient } = window.supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+        document.addEventListener('DOMContentLoaded', () => {
+            const warn = document.createElement('div');
+            warn.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ef4444;color:#fff;text-align:center;padding:12px 16px;z-index:9999;font-family:sans-serif;font-size:14px;font-weight:700;';
+            warn.innerHTML = '⚠ SUPABASE NOT CONFIGURED — Open this file and replace SUPABASE_URL and SUPABASE_ANON_KEY with your actual values.';
+            document.body.prepend(warn);
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // 2. GLOBAL STATE
+    // ═══════════════════════════════════════════════════════════════
+    let G = {
+        user:   null,   
+        lang:   'en',
+        admin:  {},     
+        wizard: { step:0, total:0, qOrder:[], oOrder:{}, ans:{}, tasks:[] }
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // 3. TRANSLATIONS
+    // ═══════════════════════════════════════════════════════════════
+    const T = {
+        en:{
+            app_title:'JORC Digital Literacy LMS', app_subtitle:'Computer Basics for Beginners',
+            logout:'Logout', login_title:'Student Portal',
+            login_subtitle:'Enter your Student Code to begin.',
+            label_name:'Full Name', label_code:'Student ID Code', btn_start:'Start Assessment',
+            course_completed:'Course Completed!',
+            course_completed_msg:'You have mastered all modules. View your final report.',
+            view_transcript:'View Transcript', dashboard_title:'My Learning Path',
+            dashboard_subtitle:'Select a module to begin your assessment.', goal:'Goal',
+            part_a_title:'Knowledge Check', part_a_instr:'Select the best answer.',
+            part_b_title:'Practical Execution', part_b_instr:'Perform these on your computer. Check only when done.',
+            btn_submit:'Submit Assessment', btn_next:'Next Question', btn_prev:'Previous',
+            select_answer_error:'Please select an answer to continue.',
+            result_title:'Module Result', download_pdf:'Save Result', close:'Continue Learning',
+            transcript_title:'Official Transcript',
+            week_1_title:'Computer Fundamentals & OS', week_2_title:'Digital Communication & PowerPoint',
+            week_3_title:'Word Processing & Spreadsheets', week_4_title:'Introduction to Artificial Intelligence',
+            week_5_title:'Final Capstone Project',
+            excellent:'Outstanding! Your progress has been saved to Supabase.',
+            retake:'Not quite. Please review the material and try again.',
+            submit_capstone:'Week 5 is the Final Capstone (50 Marks). Only proceed if instructed by your administrator.',
+            start_assessment:'Begin Module', retake_btn:'Try Again',
+            completed_btn:'MASTERED', locked_btn:'LOCKED'
+        },
+        fr:{
+            app_title:'JORC LMS Alphabétisation', app_subtitle:"Bases de l'informatique",
+            logout:'Se déconnecter', login_title:'Portail Étudiant',
+            login_subtitle:'Entrez votre code étudiant.',
+            label_name:'Nom complet', label_code:'Code Étudiant', btn_start:"Commencer l'évaluation",
+            course_completed:'Parcours Terminé!', course_completed_msg:'Vous avez maîtrisé tous les modules.',
+            view_transcript:'Voir le Relevé', dashboard_title:'Mon Parcours',
+            dashboard_subtitle:'Sélectionnez un module.', goal:'Objectif',
+            part_a_title:'Vérification', part_a_instr:'Sélectionnez la meilleure réponse.',
+            part_b_title:'Exécution Pratique', part_b_instr:'Cochez uniquement si terminé.',
+            btn_submit:'Soumettre', btn_next:'Suivant', btn_prev:'Précédent',
+            select_answer_error:'Veuillez sélectionner une réponse.',
+            result_title:'Résultat', download_pdf:'Sauvegarder', close:'Continuer',
+            transcript_title:'Relevé Officiel',
+            week_1_title:'Bases & OS', week_2_title:'Communication & Présentation',
+            week_3_title:'Word & Excel', week_4_title:"Intro à l'IA", week_5_title:'Projet Final',
+            excellent:'Exceptionnel! Progrès sauvegardés.', retake:'Veuillez réessayer.',
+            submit_capstone:'Projet Final (50 pts). Ne continuez que sur instruction.',
+            start_assessment:'Commencer', retake_btn:'Réessayer',
+            completed_btn:'MAÎTRISÉ', locked_btn:'VERROUILLÉ'
+        },
+        yo:{
+            app_title:'JORC LMS Imọ-ẹrọ Kọmputa', app_subtitle:'Awọn ipilẹ fun Awọn olubere',
+            logout:'Jade', login_title:'Ẹnu-ọna Akeko', login_subtitle:'Tẹ koodu rẹ sii lati wọle.',
+            label_name:'Orukọ Kikun', label_code:'Koodu Akeko', btn_start:'Bẹrẹ Igbelewọn',
+            course_completed:'Ẹkọ ti pari!', course_completed_msg:'O ti ṣaṣeyọri ninu gbogbo idanwo.',
+            view_transcript:'Wo Iwe Ẹri', dashboard_title:'Oju-iwe Ẹkọ',
+            dashboard_subtitle:'Yan idanwo kan lati bẹrẹ.', goal:'Ero',
+            part_a_title:'Idanwo', part_a_instr:'Yan idahun to tọ.',
+            part_b_title:'Iṣẹ Ṣiṣe', part_b_instr:'Ṣe lori kọmputa rẹ. Fa ami ti o ba pari.',
+            btn_submit:'Firanṣẹ', btn_next:'Itele', btn_prev:'Ti tẹlẹ',
+            select_answer_error:'Jọwọ yan idahun kan.',
+            result_title:'Abajade', download_pdf:'Gbaa PDF', close:'Tesiwaju',
+            transcript_title:'Iwe-ẹri Iṣẹ',
+            week_1_title:'Awọn ipilẹ Kọmputa', week_2_title:'Ayelujara & Ifihan',
+            week_3_title:'Titẹ Iwe & Iṣiro', week_4_title:'Ifihan si AI', week_5_title:'Iṣẹ Aṣekan',
+            excellent:'O ṣe daadaa! A ti fipamọ.', retake:'Jọwọ tun ṣe.',
+            submit_capstone:'Iṣẹ Aṣekan (Ami 50). Tẹsiwaju ti olukọ ba paṣẹ.',
+            start_assessment:'Bẹrẹ', retake_btn:'Tun ṣe',
+            completed_btn:'TI PARI', locked_btn:'TITI PA'
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // 4. COURSE DATA - FULLY LOCALIZED
+    // ═══════════════════════════════════════════════════════════════
+    const WEEKS_DATA = {
+        en: [
+            { id:1, titleKey:'week_1_title',
+              goal:'Understand basic hardware and mouse control.',
+              scenario:'Imagine you are a shop owner. You need to prepare your digital table for work.',
+              questions:[
+                {q:'Which part allows you to send information INTO the computer?', opts:['Monitor','Keyboard','Speaker','Printer'], ans:1},
+                {q:'Which of these is considered HARDWARE?', opts:['Microsoft Word','A Computer Mouse','A MP3 Song','A PDF Document'], ans:1},
+                {q:'Which storage size holds the MOST files?', opts:['1 KB (Kilobyte)','1 GB (Gigabyte)','1 MB (Megabyte)','1 Byte'], ans:1},
+                {q:'Why is it important to create Folders on the Desktop?', opts:['To calculate money','To keep files organized','To stop the computer from getting hot','To connect to the internet'], ans:1}
+              ],
+              tasks:['Turn on the computer monitor.','Right-Click and Refresh the Desktop.','Create a New Folder on the Desktop.',"Rename the folder to 'My Shop'.","Open the folder.",'Close the folder using the Red X.']
+            },
+            { id:2, titleKey:'week_2_title',
+              goal:'Internet safety and basic slide presentation.',
+              scenario:'You are the Youth Leader. Create a Welcome Screen for the village meeting.',
+              questions:[
+                {q:'Where do you type your question to find a price on the internet?', opts:['Microsoft Word','Google Search Bar','Calculator','Microsoft Excel'], ans:1},
+                {q:"You receive an email: 'YOU WON ₦500,000, send PIN'. What do you do?", opts:['Send your pin','Delete it immediately','Reply to ask for more info','Forward it to a friend'], ans:1},
+                {q:'If you lose your phone, what happens to photos saved on Google Drive?', opts:['They are lost forever','They are safe in the Cloud','They get deleted automatically','They move to your email'], ans:1},
+                {q:'When is the best time to use PowerPoint?', opts:['To write a formal letter','To calculate a budget','To show pictures to an audience','To browse the internet'], ans:2}
+              ],
+              tasks:["Open Google Chrome and search for 'Nigerian Flag'.","Open PowerPoint and choose Blank Presentation.","Type Title 'Village Meeting' on the first slide.",'Add a New Slide.','Change Design/Theme to a color of your choice.','Start the Slideshow on full screen.']
+            },
+            { id:3, titleKey:'week_3_title',
+              goal:'Typing letters and calculating numbers automatically.',
+              scenario:"You are a trader. Write a price list and calculate total cost.",
+              questions:[
+                {q:'Which software is best for typing long letters or reports?', opts:['Microsoft Excel','Microsoft Word','PowerPoint','Google Drive'], ans:1},
+                {q:'Which button makes text appear Thicker and Darker?', opts:['Bold (B)','Italic (I)','Underline (U)','Strikethrough (S)'], ans:0},
+                {q:'In Excel, what is the name of the box located in Column B, Row 5?', opts:['5B','B5','Cell 2','Row B5'], ans:1},
+                {q:'What is the FIRST symbol you must type for an Excel formula?', opts:['+ (Plus)','= (Equals)','? (Question Mark)','# (Hash)'], ans:1}
+              ],
+              tasks:["Open Word and type the Title: 'My Market List'.",'Highlight the Title, make it Bold, and Center it.','Open Microsoft Excel.',"In Cell A1 type 'Rice', and in B1 type '1000'.","In Cell A2 type 'Beans', and in B2 type '500'.",'Use a Formula or AutoSum to calculate the Total.']
+            },
+            { id:4, titleKey:'week_4_title',
+              goal:'Understand basic Artificial Intelligence concepts.',
+              scenario:'You are a Secretary. Use AI to draft a text message inviting farmers.',
+              questions:[
+                {q:'Does an AI like ChatGPT have a human soul or feelings?', opts:['Yes, it has a spirit','No, it is just a computer program','Yes, it is a living being','Only when connected to the internet'], ans:1},
+                {q:'Which of these tasks can an AI software NOT do?', opts:['Write a professional email','Sweep the physical floor','Generate a picture from text','Translate a document'], ans:1},
+                {q:'What do we call the instruction sentence you type into an AI?', opts:['A Command','A Prompt','A Secret Code','A Query Tag'], ans:1},
+                {q:'If an AI writes a speech for you, what MUST you always do?', opts:['Read it and check the facts yourself','Read it blindly to the audience','Submit it without looking','Delete it after use'], ans:0}
+              ],
+              tasks:['Open an AI tool (ChatGPT, Gemini, or Copilot).',"Type Prompt: 'Write a 2-line text inviting farmers to a meeting on Saturday'.",'Ask the AI to make it shorter.','Highlight and Copy the text.','Paste the text into Microsoft Word.','Save the document.']
+            },
+            { id:5, titleKey:'week_5_title',
+              goal:'Final Course Evaluation (50 Marks).',
+              scenario:'Final Project Submission to Instructor.',
+              questions:[],
+              tasks:['Compile all saved documents.','Submit Final Project Folder to Instructor.','Present Project to Instructor for grading.']
+            }
+        ],
+        fr: [
+            { id:1, titleKey:'week_1_title',
+              goal:'Comprendre le matériel de base et le contrôle de la souris.',
+              scenario:'Imaginez que vous êtes un commerçant. Vous devez préparer votre table numérique pour le travail.',
+              questions:[
+                {q:'Quelle partie vous permet d\'envoyer des informations DANS l\'ordinateur ?', opts:['Écran','Clavier','Haut-parleur','Imprimante'], ans:1},
+                {q:'Lequel de ces éléments est considéré comme du MATÉRIEL (Hardware) ?', opts:['Microsoft Word','Une souris d\'ordinateur','Une chanson MP3','Un document PDF'], ans:1},
+                {q:'Quelle taille de stockage contient le PLUS de fichiers ?', opts:['1 Ko (Kilooctet)','1 Go (Gigaoctet)','1 Mo (Mégaoctet)','1 Octet'], ans:1},
+                {q:'Pourquoi est-il important de créer des dossiers sur le bureau ?', opts:['Pour calculer de l\'argent','Pour garder les fichiers organisés','Pour empêcher l\'ordinateur de chauffer','Pour se connecter à Internet'], ans:1}
+              ],
+              tasks:['Allumez l\'écran de l\'ordinateur.','Faites un clic droit et actualisez le bureau.','Créez un nouveau dossier sur le bureau.',"Renommez le dossier en 'Ma Boutique'.","Ouvrez le dossier.",'Fermez le dossier à l\'aide de la croix rouge.']
+            },
+            { id:2, titleKey:'week_2_title',
+              goal:'Sécurité sur Internet et présentation de base sur diapositives.',
+              scenario:'Vous êtes le responsable des jeunes. Créez un écran de bienvenue pour la réunion du village.',
+              questions:[
+                {q:'Où tapez-vous votre question pour trouver un prix sur Internet ?', opts:['Microsoft Word','Barre de recherche Google','Calculatrice','Microsoft Excel'], ans:1},
+                {q:"Vous recevez un e-mail : 'VOUS AVEZ GAGNÉ 500 000 ₦, envoyez votre code PIN'. Que faites-vous ?", opts:['Envoyer votre code PIN','Le supprimer immédiatement','Répondre pour demander plus d\'infos','Le transférer à un ami'], ans:1},
+                {q:'Si vous perdez votre téléphone, qu\'advient-il des photos enregistrées sur Google Drive ?', opts:['Elles sont perdues à jamais','Elles sont en sécurité dans le Cloud','Elles sont supprimées automatiquement','Elles sont déplacées vers vos e-mails'], ans:1},
+                {q:'Quel est le meilleur moment pour utiliser PowerPoint ?', opts:['Pour écrire une lettre formelle','Pour calculer un budget','Pour montrer des images à un public','Pour naviguer sur Internet'], ans:2}
+              ],
+              tasks:["Ouvrez Google Chrome et recherchez 'Drapeau du Nigeria'.","Ouvrez PowerPoint et choisissez Présentation vide.","Tapez le titre 'Réunion du village' sur la première diapositive.",'Ajoutez une nouvelle diapositive.','Modifiez la conception/le thème avec une couleur de votre choix.','Démarrez le diaporama en plein écran.']
+            },
+            { id:3, titleKey:'week_3_title',
+              goal:'Taper des lettres et calculer des nombres automatiquement.',
+              scenario:"Vous êtes un commerçant. Rédigez une liste de prix et calculez le coût total.",
+              questions:[
+                {q:'Quel logiciel est le meilleur pour taper de longues lettres ou des rapports ?', opts:['Microsoft Excel','Microsoft Word','PowerPoint','Google Drive'], ans:1},
+                {q:'Quel bouton rend le texte plus épais et plus sombre ?', opts:['Gras (B)','Italique (I)','Souligné (U)','Barré (S)'], ans:0},
+                {q:'Dans Excel, quel est le nom de la case située dans la colonne B, ligne 5 ?', opts:['5B','B5','Cellule 2','Ligne B5'], ans:1},
+                {q:'Quel est le PREMIER symbole que vous devez taper pour une formule Excel ?', opts:['+ (Plus)','= (Égal)','? (Point d\'interrogation)','# (Dièse)'], ans:1}
+              ],
+              tasks:["Ouvrez Word et tapez le titre : 'Ma liste de marché'.",'Mettez le titre en surbrillance, en gras et centrez-le.','Ouvrez Microsoft Excel.',"Dans la cellule A1 tapez 'Riz', et dans B1 tapez '1000'.","Dans la cellule A2 tapez 'Haricots', et dans B2 tapez '500'.",'Utilisez une formule ou la somme automatique pour calculer le total.']
+            },
+            { id:4, titleKey:'week_4_title',
+              goal:'Comprendre les concepts de base de l\'intelligence artificielle.',
+              scenario:'Vous êtes secrétaire. Utilisez l\'IA pour rédiger un SMS invitant les agriculteurs.',
+              questions:[
+                {q:'Une IA comme ChatGPT a-t-elle une âme ou des sentiments humains ?', opts:['Oui, elle a un esprit','Non, ce n\'est qu\'un programme informatique','Oui, c\'est un être vivant','Uniquement lorsqu\'elle est connectée à Internet'], ans:1},
+                {q:'Laquelle de ces tâches un logiciel d\'IA NE PEUT-IL PAS faire ?', opts:['Rédiger un e-mail professionnel','Balayer le sol physique','Générer une image à partir d\'un texte','Traduire un document'], ans:1},
+                {q:'Comment appelle-t-on la phrase d\'instruction que vous tapez dans une IA ?', opts:['Une commande','Un Prompt','Un code secret','Une balise de requête'], ans:1},
+                {q:'Si une IA écrit un discours pour vous, que DEVEZ-vous toujours faire ?', opts:['Le lire et vérifier les faits vous-même','Le lire aveuglément au public','Le soumettre sans regarder','Le supprimer après utilisation'], ans:0}
+              ],
+              tasks:['Ouvrez un outil d\'IA (ChatGPT, Gemini ou Copilot).',"Tapez le Prompt : 'Rédige un SMS de 2 lignes invitant les agriculteurs à une réunion samedi'.",'Demandez à l\'IA de le raccourcir.','Mettez en surbrillance et copiez le texte.','Collez le texte dans Microsoft Word.','Enregistrez le document.']
+            },
+            { id:5, titleKey:'week_5_title',
+              goal:'Évaluation finale du cours (50 points).',
+              scenario:'Soumission du projet final au formateur.',
+              questions:[],
+              tasks:['Compilez tous les documents enregistrés.','Soumettez le dossier du projet final au formateur.','Présentez le projet au formateur pour notation.']
+            }
+        ],
+        yo: [
+            { id:1, titleKey:'week_1_title',
+              goal:'Loye ẹrọ kọmputa ipilẹ ati bi a ṣe n lo asin (mouse).',
+              scenario:'Foju inu wo pe o jẹ onitaja. O nilo lati ṣeto tabili oni-nọmba rẹ fun iṣẹ.',
+              questions:[
+                {q:'Ewo ninu awọn wọnyi lo n jẹ ki o fi iwifun sinu kọmputa?', opts:['Atẹle (Monitor)','Bọtini-itẹwe (Keyboard)','Gbohungbohun (Speaker)','Ẹrọ-itẹwe (Printer)'], ans:1},
+                {q:'Ewo ninu awọn wọnyi ni a pe ni OHUN ELO (Hardware)?', opts:['Microsoft Word','Asin Kọmputa (Mouse)','Orin MP3','Iwe PDF'], ans:1},
+                {q:'Iwọn ibi ipamọ wo ni o gba awọn faili PUPỌ julọ?', opts:['1 KB (Kilobyte)','1 GB (Gigabyte)','1 MB (Megabyte)','1 Byte'], ans:1},
+                {q:'Kini idi ti o fi ṣe pataki lati ṣẹda Awọn folda lori Ojú-iṣẹ (Desktop)?', opts:['Lati ṣe iṣiro owo','Lati jẹ ki awọn faili wa ni eto','Lati da kọmputa duro lati gbigbona','Lati sopọ mọ intanẹẹti'], ans:1}
+              ],
+              tasks:['Tan atẹle kọmputa.','Tẹ-ọtun (Right-Click) ki o si sọ Ojú-iṣẹ di tuntun.','Ṣẹda Folda Tuntun lori Ojú-iṣẹ.',"Yi orukọ folda pada si 'Ṣọọbu Mi'.","Ṣii folda naa.",'Pa folda naa nipa lilo ami X pupa.']
+            },
+            { id:2, titleKey:'week_2_title',
+              goal:'Aabo lori intanẹẹti ati igbejade ifaworanhan ipilẹ.',
+              scenario:'Iwọ ni Olori Awọn Ọdọ. Ṣẹda Iboju Kaabo fun ipade abule.',
+              questions:[
+                {q:'Nibo ni o ti tẹ ibeere rẹ lati wa iye owo lori intanẹẹti?', opts:['Microsoft Word','Aaye Iwadi Google','Ẹrọ iṣiro (Calculator)','Microsoft Excel'], ans:1},
+                {q:"O gba imeeli kan: 'O TI JAWE OLUBORI ₦500,000, fi PIN rẹ ranṣẹ'. Kini o ṣe?", opts:['Fi pin rẹ ranṣẹ','Pa a rẹ lẹsẹkẹsẹ','Fesi lati beere fun alaye diẹ sii','Fi ranṣẹ si ọrẹ kan'], ans:1},
+                {q:'Ti foonu rẹ ba sọnu, kini o ṣẹlẹ si awọn fọto ti a fipamọ sori Google Drive?', opts:['Wọn ti sọnu titi lae','Wọn wa lailewu ninu awọsanma (Cloud)','Wọn parẹ laifọwọyi','Wọn gbe lọ si imeeli rẹ'], ans:1},
+                {q:'Igba wo ni o dara julọ lati lo PowerPoint?', opts:['Lati kọ lẹta iṣẹ','Lati ṣe iṣiro isuna owo','Lati ṣafihan awọn aworan si awọn eniyan','Lati lọ kiri lori intanẹẹti'], ans:2}
+              ],
+              tasks:["Ṣii Google Chrome ki o si wa 'Asia Naijiria (Nigerian Flag)'.","Ṣii PowerPoint ki o yan Ifihan Ofo (Blank Presentation).","Tẹ Akọle 'Ipade Abule' sori ifaworanhan akọkọ.",'Ṣafikun Ifaworanhan Tuntun (New Slide).','Yi Apẹrẹ/Akori pada si awọ ti o fẹ.','Bẹrẹ iṣafihan ifaworanhan lori iboju kikun.']
+            },
+            { id:3, titleKey:'week_3_title',
+              goal:'Titẹ awọn lẹta ati ṣiṣiro awọn nọmba laifọwọyi.',
+              scenario:"O jẹ onitaja. Kọ atokọ idiyele kan ki o si ṣe iṣiro iye owo lapapọ.",
+              questions:[
+                {q:'Sọfitiwia wo ni o dara julọ fun titẹ awọn lẹta gigun tabi awọn ijabọ?', opts:['Microsoft Excel','Microsoft Word','PowerPoint','Google Drive'], ans:1},
+                {q:'Bọtini wo lo n sọ ki ọrọ han ni Dudu ati Nipọn?', opts:['Gras/Bold (B)','Italic (I)','Underline (U)','Strikethrough (S)'], ans:0},
+                {q:'Ninu Excel, kini orukọ apoti ti o wa ni Ọwọn (Column) B, Ila (Row) 5?', opts:['5B','B5','Cell 2','Row B5'], ans:1},
+                {q:'Kini aami AKỌKỌ ti o gbọdọ tẹ fun agbekalẹ Excel kan (formula)?', opts:['+ (Aropo)','= (Dọgba)','? (Ibeere)','# (Haṣi)'], ans:1}
+              ],
+              tasks:["Ṣii Word ki o si tẹ Akọle naa: 'Atokọ Ọja Mi'.",'Ṣe afihan Akọle naa, jẹ ki o Nipọn (Bold), ki o si gbe e si Aarin.','Ṣii Microsoft Excel.',"Ninu Cell A1 tẹ 'Iresi', ati ninu B1 tẹ '1000'.","Ninu Cell A2 tẹ 'Ẹwa', ati ninu B2 tẹ '500'.",'Lo Agbekalẹ (Formula) tabi AutoSum lati ṣe iṣiro Apapọ.']
+            },
+            { id:4, titleKey:'week_4_title',
+              goal:'Loye awọn imọran ipilẹ ti Imọ-ẹrọ Ọgbọn atọwọda (AI).',
+              scenario:'O jẹ Akọwe. Lo AI lati kọ ifiranṣẹ ranṣẹ lati pe awọn agbe.',
+              questions:[
+                {q:'Ṣe AI bii ChatGPT ni ẹmi tabi rilara eniyan?', opts:['Bẹẹni, o ni ẹmi','Rara, eto kọmputa lasan ni','Bẹẹni, o jẹ ẹda alãye','Nikan nigbati o ba sopọ mọ intanẹẹti'], ans:1},
+                {q:'Ewo ninu awọn iṣẹ wọnyi ni sọfitiwia AI KO LE ṣe?', opts:['Kọ imeeli iṣẹ','Gba ilẹ ti ara (sweep the floor)','Ṣẹda aworan lati inu ọrọ','Tumọ iwe aṣẹ'], ans:1},
+                {q:'Kini a n pe ni gbolohun itọnisọna ti o tẹ sinu AI?', opts:['Aṣẹ kan (Command)','Aṣẹ Itọnisọna (Prompt)','Koodu Aṣiri','Aami Ibeere'], ans:1},
+                {q:'Ti AI ba kọ ọrọ iyanju (speech) fun ọ, kini o GBỌDỌ ṣe nigbagbogbo?', opts:['Ka a ki o si ṣayẹwo awọn otitọ funrararẹ','Ka a ni afọju fun awọn eniyan','Fi silẹ laisi wiwo rẹ','Pa a rẹ lẹhin lilo'], ans:0}
+              ],
+              tasks:['Ṣii ohun elo AI kan (ChatGPT, Gemini, tabi Copilot).',"Tẹ Itọnisọna (Prompt): 'Kọ ifiranṣẹ ẹlẹsẹ meji lati pe awọn agbe si ipade ni Ọjọ Abamẹta'.",'Beere lọwọ AI lati jẹ ki o kuru.','Ṣe afihan (Highlight) ki o si Daakọ (Copy) ọrọ naa.','Lẹ (Paste) ọrọ naa sinu Microsoft Word.','Fipamọ iwe aṣẹ naa.']
+            },
+            { id:5, titleKey:'week_5_title',
+              goal:'Igbelewọn Ipari Ẹkọ (Ami 50).',
+              scenario:'Ifisilẹ Iṣẹ Akanṣe Ipari si Olukọni.',
+              questions:[],
+              tasks:['Ṣajọ gbogbo awọn iwe aṣẹ ti a fipamọ.','Fi Folda Iṣẹ Akanṣe Ipari silẹ fun Olukọni.','Ṣe afihan Iṣẹ Akanṣe si Olukọni fun igbelewọn.']
+            }
+        ]
+    };
+
+    function getWeeks() {
+        return WEEKS_DATA[G.lang] || WEEKS_DATA.en;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // 5. UTILITY FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+    function blankProgress() {
+        return { '1':{score:0,passed:false,taken:false}, '2':{score:0,passed:false,taken:false},
+                 '3':{score:0,passed:false,taken:false}, '4':{score:0,passed:false,taken:false},
+                 '5':{score:0,passed:false,taken:false} };
+    }
+
+    function newStudent(name, code) {
+        return { code, name, created_at: new Date().toISOString(), progress: blankProgress() };
+    }
+
+    function wp(weekNum) {
+        if (!G.user || !G.user.progress) return {score:0,passed:false,taken:false};
+        return G.user.progress[String(weekNum)] || {score:0,passed:false,taken:false};
+    }
+
+    function fixProgress(user) {
+        if (!user.progress) user.progress = blankProgress();
+        for (let i = 1; i <= 5; i++) {
+            const k = String(i);
+            if (!user.progress[k]) user.progress[k] = {score:0,passed:false,taken:false};
+            const p = user.progress[k];
+            p.score  = Number(p.score)  || 0;
+            p.passed = Boolean(p.passed);
+            p.taken  = Boolean(p.taken);
+        }
+        return user;
+    }
+
+    function shuffle(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    function t()   { return T[G.lang] || T.en; }
+    function show(id) { document.getElementById(id).classList.remove('hidden'); }
+    function hide(id) { document.getElementById(id).classList.add('hidden'); }
+    function txt(id, val) { document.getElementById(id).innerText = val; }
+
+    // ─── Sync status ──────────────────────────────────────────────
+    function syncOK()  { document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-cloud text-green-400" title="Saved to Supabase"></i>'; }
+    function syncNew() { document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-circle-check text-blue-400" title="New record created"></i>'; }
+    function syncOff() { document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-400" title="Save failed — check connection"></i>'; }
+    function syncSpin(){ document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-spinner fa-spin text-gray-400"></i>'; }
+
+    // ─── Cookies (only for form prefill) ──────────────────────────
+    function ckSet(n,v,d) {
+        document.cookie = n+'='+encodeURIComponent(v)+';expires='+new Date(Date.now()+d*864e5).toUTCString()+';path=/;SameSite=Lax';
+    }
+    function ckGet(n) {
+        const m = document.cookie.split('; ').find(r => r.startsWith(n+'='));
+        return m ? decodeURIComponent(m.split('=')[1]) : '';
+    }
+    function ckDel(n) { document.cookie = n+'=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/'; }
+
+    (function() {
+        const cn = ckGet('jorc_name'), cc = ckGet('jorc_code');
+        if (cn && cc) {
+            document.getElementById('student-name').value  = cn;
+            document.getElementById('student-code').value  = cc;
+            document.getElementById('remember-me').checked = true;
+        }
+
+        // Check for active session to display resume prompt
+        const actCode = localStorage.getItem('jorc_active_session_code');
+        const actName = localStorage.getItem('jorc_active_session_name');
+        if (actCode && actName) {
+            document.getElementById('resume-session-name').innerText = actName + " (" + actCode + ")";
+            document.getElementById('resume-session-box').classList.remove('hidden');
+            document.getElementById('resume-session-divider').classList.remove('hidden');
+        }
+    })();
+
+    window.resumeSession = function() {
+        const actCode = localStorage.getItem('jorc_active_session_code');
+        const actName = localStorage.getItem('jorc_active_session_name');
+        if (actCode && actName) {
+            document.getElementById('student-name').value = actName;
+            document.getElementById('student-code').value = actCode;
+            document.getElementById('btn-login').click();
+        }
+    };
+
+    // ─── Copy/Paste prevention during assessment ──────────────────
+    function inAssessment() {
+        const el = document.getElementById('assessment-screen');
+        return el && !el.classList.contains('hidden');
+    }
+    document.addEventListener('copy',    e => { if (inAssessment()) { e.preventDefault(); try { e.clipboardData.setData('text/plain',''); } catch(x){} } });
+    document.addEventListener('cut',     e => { if (inAssessment()) e.preventDefault(); });
+    document.addEventListener('keydown', e => {
+        if (inAssessment() && (e.ctrlKey||e.metaKey) && 'caxusp'.includes((e.key||'').toLowerCase())) e.preventDefault();
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // 6. SUPABASE DATA LAYER
+    // ═══════════════════════════════════════════════════════════════
+    async function dbLoad(code) {
+        try {
+            const { data, error } = await db
+                .from('students')
+                .select('*')
+                .eq('code', code)
+                .maybeSingle();
+            if (error) { console.error('[JORC] dbLoad error:', error); return null; }
+            if (!data)  return null;
+            return fixProgress(data);
+        } catch(e) {
+            console.error('[JORC] dbLoad exception:', e);
+            return null;
+        }
+    }
+
+    async function serverSave() {
+        if (!G.user) return;
+        syncSpin();
+        try {
+            const payload = {
+                code:       G.user.code,
+                name:       G.user.name,
+                created_at: G.user.created_at || new Date().toISOString(),
+                progress:   G.user.progress
+            };
+            const { error } = await db
+                .from('students')
+                .upsert(payload, { onConflict: 'code' });
+            if (error) { syncOff(); console.error('[JORC] serverSave error:', error); }
+            else        syncOK();
+        } catch(e) {
+            syncOff();
+            console.error('[JORC] serverSave exception:', e);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // 7. AUTH — LOGIN / LOGOUT
+    // ═══════════════════════════════════════════════════════════════
+    window.handleLogin = async function(e) {
+        e.preventDefault();
+        const name  = document.getElementById('student-name').value.trim();
+        const raw   = document.getElementById('student-code').value.trim();
+        const code  = raw.toUpperCase();
+        const remem = document.getElementById('remember-me').checked;
+        const btn   = document.getElementById('btn-login');
+
+        if (name.length < 2)  { alert('Please enter your full name.'); return; }
+        if (raw.length < 2)   { alert('Please enter your Student ID Code.'); return; }
+
+        if (remem) { ckSet('jorc_name', name, 365); ckSet('jorc_code', raw, 365); }
+        else        { ckDel('jorc_name'); ckDel('jorc_code'); }
+
+        if (code === 'ADMINKEY') {
+            localStorage.setItem('jorc_active_session_code', 'ADMINKEY');
+            localStorage.setItem('jorc_active_session_name', 'Administrator');
+            hide('login-screen'); show('admin-screen'); show('user-display');
+            txt('header-username', 'Administrator');
+            window.refreshAdmin();
+            return;
+        }
+
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<div class="loader mr-3"></div><span class="font-bold">Connecting to Supabase...</span>';
+        btn.disabled  = true;
+
+        try {
+            let record = await dbLoad(code);
+
+            if (record) {
+                G.user       = record;
+                G.user.name  = name; 
+                await serverSave();
+                localStorage.setItem('jorc_active_session_code', G.user.code);
+                localStorage.setItem('jorc_active_session_name', G.user.name);
+                loadDashboard();
+            } else {
+                G.user = newStudent(name, code);
+                const payload = {
+                    code:       G.user.code,
+                    name:       G.user.name,
+                    created_at: G.user.created_at,
+                    progress:   G.user.progress
+                };
+                const { data, error } = await db.from('students').insert(payload).select().single();
+                if (error) throw new Error(error.message);
+                G.user = fixProgress(data);
+                syncNew();
+                localStorage.setItem('jorc_active_session_code', G.user.code);
+                localStorage.setItem('jorc_active_session_name', G.user.name);
+                loadDashboard();
+            }
+        } catch(err) {
+            console.error('[JORC] Login error:', err);
+            alert('Could not connect to Supabase.\n\nError: ' + err.message + '\n\nPlease check your SUPABASE_URL and SUPABASE_ANON_KEY.');
+        } finally {
+            btn.innerHTML = orig;
+            btn.disabled  = false;
+        }
+    };
+
+    window.logout = function() {
+        G.user = null;
+        localStorage.removeItem('jorc_active_session_code');
+        localStorage.removeItem('jorc_active_session_name');
+        
+        hide('resume-session-box');
+        hide('resume-session-divider');
+
+        ['user-display','dashboard-screen','admin-screen','assessment-screen',
+         'result-overlay','transcript-overlay'].forEach(hide);
+        show('login-screen');
+        
+        document.getElementById('student-name').value  = ckGet('jorc_name') || '';
+        document.getElementById('student-code').value  = ckGet('jorc_code') || '';
+        document.getElementById('remember-me').checked = !!ckGet('jorc_code');
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // 8. DASHBOARD
+    // ═══════════════════════════════════════════════════════════════
+    function loadDashboard() {
+        ['login-screen','assessment-screen','result-overlay'].forEach(hide);
+        show('dashboard-screen'); show('user-display');
+        txt('header-username', G.user.name);
+        if (wp(5).taken) show('transcript-banner');
+        else hide('transcript-banner');
+        renderCards();
+    }
+    window.loadDashboard = loadDashboard;
+
+    function renderCards() {
+        const grid = document.getElementById('week-grid');
+        grid.innerHTML = '';
+        const tr = t();
+        const ICONS  = ['🖥️','🌐','📝','🤖','🏆'];
+        const COLORS = ['from-emerald-500 to-teal-600','from-blue-500 to-indigo-600',
+                        'from-violet-500 to-purple-600','from-orange-500 to-amber-600','from-yellow-500 to-yellow-600'];
+
+        getWeeks().forEach(wk => {
+            const p      = wp(wk.id);
+            const prevOk = wk.id === 1 || wp(wk.id - 1).taken;
+            const locked = !prevOk;
+            const max    = wk.id === 5 ? 50 : 10;
+
+            let badge, btnTxt, btnCls;
+            if (locked) {
+                badge  = '<span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-gray-100 text-gray-400">'+tr.locked_btn+'</span>';
+                btnTxt = '<i class="fa-solid fa-lock mr-2"></i>'+tr.locked_btn;
+                btnCls = 'bg-gray-200 text-gray-400 cursor-not-allowed';
+            } else if (p.passed) {
+                badge  = '<span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-green-100 text-green-700">'+tr.completed_btn+' '+p.score+'/'+max+'</span>';
+                btnTxt = '<i class="fa-solid fa-rotate-right mr-2"></i>'+tr.retake_btn;
+                btnCls = 'bg-brand hover:bg-brand-dark text-white shadow-lg';
+            } else {
+                badge  = '<span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-blue-100 text-blue-700">Available</span>';
+                btnTxt = '<i class="fa-solid fa-play mr-2"></i>'+tr.start_assessment;
+                btnCls = 'bg-brand hover:bg-brand-dark text-white shadow-lg';
+            }
+
+            grid.innerHTML += `
+                <div class="glass-panel rounded-[2rem] overflow-hidden border-t-4 border-brand flex flex-col min-h-[320px] ${locked ? 'opacity-60 grayscale' : 'hover:scale-[1.01] transition-transform'}">
+                    <div class="bg-gradient-to-br ${COLORS[wk.id-1]} p-6 flex items-center justify-between">
+                        <span class="text-4xl">${ICONS[wk.id-1]}</span>
+                        <span class="text-6xl font-black text-white opacity-20">0${wk.id}</span>
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="text-lg font-bold text-gray-800 leading-tight flex-grow mr-2">${tr[wk.titleKey]}</h3>
+                            ${badge}
+                        </div>
+                        <p class="text-gray-500 text-sm mb-6 flex-grow">${wk.goal}</p>
+                        <button onclick="window.startWeek(${wk.id})" ${locked?'disabled':''}
+                            class="w-full font-bold py-4 rounded-xl transition-all ${btnCls}">${btnTxt}</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    window.changeLanguage = function(lang) {
+        G.lang = lang;
+        const tr = t();
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const k = el.getAttribute('data-i18n');
+            if (tr[k]) el.innerText = tr[k];
+        });
+        if (!document.getElementById('dashboard-screen').classList.contains('hidden'))  renderCards();
+        if (!document.getElementById('assessment-screen').classList.contains('hidden')) renderWizard();
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // 9. ASSESSMENT WIZARD
+    // ═══════════════════════════════════════════════════════════════
+    window.startWeek = function(id) {
+        const wk = getWeeks().find(w => w.id === id);
+        const tr = t();
+
+        if (id === 5) {
+            if (confirm(tr.submit_capstone)) {
+                G.user.progress['5'] = {score:0, passed:false, taken:true};
+                serverSave();
+                showResult(5, 0, 50);
+            }
+            return;
+        }
+
+        hide('dashboard-screen');
+        show('assessment-screen');
+        document.getElementById('quiz-title').dataset.wid = id;
+        txt('quiz-title', tr[wk.titleKey]);
+        txt('quiz-goal',  wk.goal);
+
+        const qIdx = shuffle(wk.questions.map((_,i) => i));
+        const oIdx = {};
+        qIdx.forEach((origQ, step) => { oIdx[step] = shuffle(wk.questions[origQ].opts.map((_,i)=>i)); });
+
+        G.wizard = { step:0, total: wk.questions.length + 1, qOrder:qIdx, oOrder:oIdx, ans:{}, tasks:[] };
+        renderWizard();
+    };
+
+    function renderWizard() {
+        const wid  = parseInt(document.getElementById('quiz-title').dataset.wid);
+        const wk   = getWeeks().find(w => w.id === wid);
+        const tr   = t();
+        const cont = document.getElementById('wizard-steps-container');
+        cont.innerHTML = '';
+
+        const isPartA = G.wizard.step < wk.questions.length;
+
+        if (isPartA) {
+            const step  = G.wizard.step;
+            const origQ = G.wizard.qOrder[step];
+            const q     = wk.questions[origQ];
+            const oOrd  = G.wizard.oOrder[step];
+
+            let opts = '';
+            oOrd.forEach((origOpt, disp) => {
+                const chk = G.wizard.ans[step] === disp;
+                opts += `<label class="option-card cursor-pointer block mb-4">
+                    <input type="radio" name="q${step}" value="${disp}" class="hidden" ${chk?'checked':''}
+                        onchange="G.wizard.ans[${step}]=parseInt(this.value);renderWizard();">
+                    <div class="flex items-center p-5 rounded-2xl border-2 transition-all ${chk ? 'border-brand bg-green-50 shadow-md' : 'border-gray-200 bg-white hover:border-gray-300'}">
+                        <div class="custom-radio w-6 h-6 rounded-full border-2 border-gray-300 mr-5 relative flex-shrink-0"></div>
+                        <span class="text-gray-700 font-semibold text-lg">${q.opts[origOpt]}</span>
+                    </div></label>`;
+            });
+
+            const scene = (step === 0 && wk.scenario)
+                ? `<div class="bg-blue-50 border border-blue-200 rounded-2xl p-5 mb-6 flex gap-3">
+                    <i class="fa-solid fa-lightbulb text-blue-500 mt-1 flex-shrink-0"></i>
+                    <div><p class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">${tr.part_a_title}</p>
+                    <p class="text-blue-800 font-medium text-sm">${wk.scenario}</p></div></div>` : '';
+
+            cont.innerHTML = `<div class="fade-in">${scene}
+                <p class="text-xs font-bold text-brand uppercase tracking-widest mb-2">Question ${step+1} of ${wk.questions.length}</p>
+                <h3 class="text-2xl font-black text-gray-800 mb-8 leading-tight">${q.q}</h3>${opts}</div>`;
+        } else {
+            let tasks = '';
+            wk.tasks.forEach((txt2, i) => {
+                const chk = !!G.wizard.tasks[i];
+                tasks += `<label class="task-card cursor-pointer block mb-4">
+                    <input type="checkbox" class="hidden" ${chk?'checked':''}
+                        onchange="G.wizard.tasks[${i}]=this.checked;renderWizard();">
+                    <div class="flex items-center p-5 rounded-2xl border-2 transition-all ${chk ? 'border-brand bg-green-50 shadow-md' : 'border-gray-200 bg-white hover:border-gray-300'}">
+                        <div class="custom-check w-8 h-8 rounded-lg border-2 ${chk ? 'bg-brand border-brand' : 'border-gray-300 bg-gray-50'} mr-5 flex-shrink-0 relative"></div>
+                        <div><p class="text-xs font-bold text-gray-400 uppercase">Step ${i+1}</p>
+                        <span class="text-gray-700 font-semibold text-base">${txt2}</span></div>
+                    </div></label>`;
+            });
+            cont.innerHTML = `<div class="fade-in">
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 flex gap-3">
+                    <i class="fa-solid fa-computer text-amber-500 mt-1 flex-shrink-0"></i>
+                    <div><p class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-1">${tr.part_b_title}</p>
+                    <p class="text-amber-800 font-medium text-sm">${tr.part_b_instr}</p></div></div>
+                <h3 class="text-2xl font-black text-gray-800 mb-8">Complete on your computer:</h3>${tasks}</div>`;
+        }
+
+        const pct = (G.wizard.step / (G.wizard.total - 1)) * 100;
+        document.getElementById('wizard-progress').style.width = Math.min(pct,100) + '%';
+        document.getElementById('btn-prev-step').classList.toggle('hidden', G.wizard.step === 0);
+        const last = G.wizard.step === G.wizard.total - 1;
+        document.getElementById('btn-next-step').classList.toggle('hidden', last);
+        document.getElementById('btn-submit-assessment').classList.toggle('hidden', !last);
+    }
+    window.renderWizard = renderWizard;
+
+    window.nextStep = function() {
+        const wid = parseInt(document.getElementById('quiz-title').dataset.wid);
+        const wk  = getWeeks().find(w => w.id === wid);
+        if (G.wizard.step < wk.questions.length && G.wizard.ans[G.wizard.step] === undefined) {
+            alert(t().select_answer_error); return;
+        }
+        G.wizard.step++;
+        renderWizard();
+    };
+    window.prevStep = function() { G.wizard.step--; renderWizard(); };
+
+    window.submitAssessment = function(e) {
+        e.preventDefault();
+        const wid  = parseInt(document.getElementById('quiz-title').dataset.wid);
+        const wk   = getWeeks().find(w => w.id === wid);
+        let score  = 0;
+
+        wk.questions.forEach((q, origQIdx) => {
+            const step = G.wizard.qOrder.indexOf(origQIdx);
+            if (step < 0) return;
+            const disp = G.wizard.ans[step];
+            if (disp === undefined) return;
+            const origOpt = G.wizard.oOrder[step][disp];
+            if (origOpt === q.ans) score++;
+        });
+        wk.tasks.forEach((_, i) => { if (G.wizard.tasks[i]) score++; });
+
+        const max    = wk.questions.length + wk.tasks.length;
+        const passed = score >= Math.ceil(max * 0.7);
+
+        G.user.progress[String(wid)] = { score, passed, taken:true };
+        serverSave();
+
+        showResult(wid, score, max);
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // 10. RESULT OVERLAY
+    // ═══════════════════════════════════════════════════════════════
+    function showResult(wid, score, max) {
+        const wk     = getWeeks().find(w => w.id === wid);
+        const tr     = t();
+        const passed = score >= Math.ceil(max * 0.7);
+
+        if (passed) confetti({ particleCount:150, spread:70, origin:{y:0.6}, colors:['#10b981','#047857','#ffffff'] });
+
+        txt('res-name',    G.user.name);
+        txt('res-code',    G.user.code);
+        txt('res-week',    tr[wk.titleKey]);
+        txt('res-score',   score);
+        txt('res-max',     '/ ' + max);
+        txt('res-status',  passed ? 'PASSED ✓' : 'RETAKE NEEDED');
+        txt('res-message', passed ? tr.excellent : tr.retake);
+        document.getElementById('res-status').className = passed
+            ? 'font-extrabold text-green-600 text-sm'
+            : 'font-extrabold text-red-600 text-sm';
+
+        show('result-overlay');
+    }
+
+    window.closeResult = function() {
+        hide('result-overlay');
+        hide('assessment-screen');
+        loadDashboard();
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // 11. TRANSCRIPT
+    // ═══════════════════════════════════════════════════════════════
+    window.showFinalTranscript = function() {
+        const tr = t();
+        txt('trans-name', G.user.name);
+        txt('trans-code', G.user.code);
+        txt('trans-date', new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'}));
+
+        const maxMap = {1:10,2:10,3:10,4:10,5:50};
+        let total = 0, rows = '';
+        getWeeks().forEach(wk => {
+            const p   = wp(wk.id);
+            const max = maxMap[wk.id];
+            const sc  = p.taken ? p.score : 0;
+            total += sc;
+            const color = p.taken && p.passed ? '#047857' : (p.taken ? '#ef4444' : '#9ca3af');
+            rows += `<tr style="border-bottom:1px solid #f3f4f6;">
+                <td class="p-4 font-semibold text-gray-800">${tr[wk.titleKey]}</td>
+                <td class="p-4 text-center font-black text-xl" style="color:${color}">${p.taken ? sc : '—'}</td>
+                <td class="p-4 text-center font-semibold text-gray-400">${max}</td></tr>`;
+        });
+        document.getElementById('trans-table-body').innerHTML = rows;
+        txt('trans-total', total);
+        txt('trans-grade', total>=90?'A+':total>=80?'A':total>=70?'B':total>=60?'C':total>=50?'D':'F');
+        show('transcript-overlay');
+    };
+    window.closeTranscript = function() { hide('transcript-overlay'); };
+
+    // ═══════════════════════════════════════════════════════════════
+    // 12. ADMIN PANEL
+    // ═══════════════════════════════════════════════════════════════
+    window.refreshAdmin = async function() {
+        const tbody  = document.getElementById('admin-table-body');
+        const loader = document.getElementById('admin-loading');
+        tbody.innerHTML = '';
+        loader.classList.remove('hidden');
+        G.admin = {};
+
+        try {
+            const { data, error } = await db
+                .from('students')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw new Error(error.message);
+
+            const list = (data || []).map(s => fixProgress(s));
+
+            if (!list.length) {
+                tbody.innerHTML = '<tr><td colspan="10" class="p-8 text-center text-gray-400 italic">No student records found. Students will appear here once they log in.</td></tr>';
+                return;
+            }
+
+            list.forEach(s => { G.admin[s.code] = s; });
+
+            const getBadge = (s, n) => {
+                const p = s.progress || {};
+                const w = p[String(n)];
+                if (!w || !w.taken) return '<span class="text-gray-300 font-bold">—</span>';
+                const cls = w.passed ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-600';
+                return '<span class="' + cls + ' px-2 py-1 rounded-lg font-bold text-sm">' + w.score + '</span>';
+            };
+
+            tbody.innerHTML = list.map(s => {
+                const done = [1,2,3,4,5].every(n => { const p=s.progress||{}; const w=p[String(n)]; return w&&w.taken; });
+                const status = done
+                    ? '<span class="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full">GRADUATE</span>'
+                    : '<span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">ACTIVE</span>';
+                return `<tr class="border-b border-gray-100 hover:bg-brand hover:bg-opacity-5 transition-colors">
+                    <td class="p-4 text-center"><input type="checkbox" class="student-checkbox w-5 h-5 text-brand rounded border-gray-300 cursor-pointer" value="${s.code}"></td>
+                    <td class="p-4 font-bold text-gray-800">${s.name||'—'}</td>
+                    <td class="p-4"><span class="font-mono text-gray-500 bg-gray-50 rounded px-2 py-1">${s.code}</span></td>
+                    <td class="p-4 text-center">${getBadge(s,1)}</td>
+                    <td class="p-4 text-center">${getBadge(s,2)}</td>
+                    <td class="p-4 text-center">${getBadge(s,3)}</td>
+                    <td class="p-4 text-center">${getBadge(s,4)}</td>
+                    <td class="p-4 text-center">${getBadge(s,5)}</td>
+                    <td class="p-4 text-center">${status}</td>
+                    <td class="p-4 text-center">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="window.editStudent('${s.code}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white p-2 rounded-lg transition" title="Edit">
+                                <i class="fa-solid fa-pen"></i></button>
+                            <button onclick="window.deleteStudent('${s.code}')" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white p-2 rounded-lg transition" title="Delete">
+                                <i class="fa-solid fa-trash"></i></button>
+                        </div></td></tr>`;
+            }).join('');
+
+        } catch(err) {
+            console.error('[JORC Admin] refreshAdmin error:', err);
+            tbody.innerHTML = '<tr><td colspan="10" class="p-6 text-red-500 text-center font-bold">⚠ Could not load from Supabase: ' + err.message + '</td></tr>';
+        } finally {
+            loader.classList.add('hidden');
+        }
+    };
+    window.refreshAdminData = window.refreshAdmin;
+
+    window.editStudent = function(code) {
+        const s = G.admin[code];
+        if (!s) { alert('Record not found. Click Refresh first.'); return; }
+        document.getElementById('edit-name').value = s.name || '';
+        [1,2,3,4,5].forEach(n => {
+            const w = (s.progress || {})[String(n)] || {};
+            document.getElementById('edit-w'+n).value = w.taken ? w.score : '';
+        });
+        document.getElementById('admin-edit-form').dataset.code = code;
+        show('admin-edit-modal');
+    };
+
+    window.closeEditModal = function() { hide('admin-edit-modal'); };
+
+    window.saveStudentEdit = async function(e) {
+        e.preventDefault();
+        const code = e.target.dataset.code;
+        const s    = G.admin[code];
+        if (!s) { alert('Record missing — refresh and try again.'); return; }
+
+        const btn  = e.target.querySelector('button[type="submit"]');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...';
+        btn.disabled  = true;
+
+        s.name = document.getElementById('edit-name').value.trim();
+        if (!s.progress) s.progress = {};
+
+        [[1,10],[2,10],[3,10],[4,10],[5,50]].forEach(([n,mx]) => {
+            const val = document.getElementById('edit-w'+n).value;
+            const key = String(n);
+            if (val === '') {
+                s.progress[key] = {score:0, passed:false, taken:false};
+            } else {
+                const sc = Math.max(0, Math.min(parseInt(val)||0, mx));
+                s.progress[key] = {score:sc, passed: sc >= mx*0.7, taken:true};
+            }
+        });
+
+        try {
+            const { error } = await db
+                .from('students')
+                .upsert({ code: s.code, name: s.name, created_at: s.created_at, progress: s.progress }, { onConflict: 'code' });
+            if (error) throw new Error(error.message);
+            hide('admin-edit-modal');
+            window.refreshAdmin();
+        } catch(err) {
+            alert('Save failed: ' + err.message);
+        } finally {
+            btn.innerHTML = orig;
+            btn.disabled  = false;
+        }
+    };
+
+    window.deleteStudent = async function(code) {
+        const s = G.admin[code];
+        const label = s ? '"' + s.name + '" (' + code + ')' : 'Code ' + code;
+        if (!confirm('Permanently delete ' + label + '?\n\nThis cannot be undone.')) return;
+        try {
+            const { error } = await db.from('students').delete().eq('code', code);
+            if (error) throw new Error(error.message);
+        } catch(e) {
+            alert('Delete failed: ' + e.message);
+        }
+        window.refreshAdmin();
+    };
+
+    window.toggleSelectAll = function(src) {
+        document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = src.checked);
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // 13. EXPORTS (Excel / Word / PDF)
+    // ═══════════════════════════════════════════════════════════════
+    window.exportSelected = function(fmt) {
+        const codes = [...document.querySelectorAll('.student-checkbox:checked')].map(cb => cb.value);
+        if (!codes.length) { alert('Select at least one student to export.'); return; }
+
+        const rows = codes.map(code => {
+            const s  = G.admin[code];
+            if (!s) return null;
+            const g  = (n) => { const p=s.progress||{}; const w=p[String(n)]; return (w&&w.taken)?w.score:'N/A'; };
+            const tot = [1,2,3,4,5].reduce((sum,n)=>{ const p=s.progress||{}; const w=p[String(n)]; return sum+(w&&w.taken?Number(w.score):0); },0);
+            return {'Name':s.name,'ID':s.code,'Wk1(/10)':g(1),'Wk2(/10)':g(2),'Wk3(/10)':g(3),'Wk4(/10)':g(4),'Capstone(/50)':g(5),'Total(/100)':tot};
+        }).filter(Boolean);
+
+        const fn = 'JORC_Export_' + new Date().toISOString().slice(0,10);
+
+        if (fmt === 'excel') {
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Scores');
+            XLSX.writeFile(wb, fn + '.xlsx');
+            return;
+        }
+
+        let trs = rows.map(r => `<tr><td>${r.Name}</td><td>${r.ID}</td><td>${r['Wk1(/10)']}</td><td>${r['Wk2(/10)']}</td><td>${r['Wk3(/10)']}</td><td>${r['Wk4(/10)']}</td><td>${r['Capstone(/50)']}</td><td><b>${r['Total(/100)']}</b></td></tr>`).join('');
+        const html = `<div style="font-family:sans-serif;padding:40px"><h2 style="color:#047857">JORC LMS — Student Report</h2>
+            <p style="color:#6b7280;font-size:12px">Generated: ${new Date().toLocaleString()}</p>
+            <table border="1" style="border-collapse:collapse;width:100%;margin-top:16px;text-align:left">
+            <tr style="background:#1f2937;color:#fff"><th style="padding:8px">Name</th><th>ID</th><th>Wk1</th><th>Wk2</th><th>Wk3</th><th>Wk4</th><th>Capstone</th><th>Total</th></tr>${trs}</table></div>`;
+
+        if (fmt === 'word') {
+            const a = document.createElement('a');
+            a.href = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(html);
+            a.download = fn + '.doc'; a.click();
+        } else {
+            const pw = window.open('','_blank','width=960,height=700');
+            pw.document.write(`<!DOCTYPE html><html><head><style>*{margin:0;padding:0;box-sizing:border-box}body{padding:20px;font-family:sans-serif}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:8px}@media print{body{padding:0}@page{size:A4 landscape;margin:10mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body>${html}</body></html>`);
+            pw.document.close();
+            setTimeout(() => { pw.focus(); pw.print(); }, 600);
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // 14. PRINT SLIPS (Result & Transcript)
+    // ═══════════════════════════════════════════════════════════════
+    window.printSlip = function(elId) {
+        let fn;
+        if (elId === 'result-slip') {
+            const candidateName = (document.getElementById('res-name').innerText || 'Student').replace(/\s+/g, '_');
+            const weekLabel     = (document.getElementById('res-week').innerText  || 'Week').replace(/\s+/g, '_');
+            fn = candidateName + '_' + weekLabel;
+        } else {
+            const candidateName = (document.getElementById('trans-name').innerText || 'Student').replace(/\s+/g, '_');
+            fn = candidateName + '_Transcript';
+        }
+        let body = '';
+
+        if (elId === 'result-slip') {
+            const name   = document.getElementById('res-name').innerText;
+            const code   = document.getElementById('res-code').innerText;
+            const week   = document.getElementById('res-week').innerText;
+            const score  = document.getElementById('res-score').innerText;
+            const maxStr = document.getElementById('res-max').innerText.replace('/','').trim();
+            const status = document.getElementById('res-status').innerText;
+            const msg    = document.getElementById('res-message').innerText;
+            const passed = status.includes('PASSED') || status.includes('MAÎTRISÉ') || status.includes('TI PARI');
+
+            body = `<div style="max-width:420px;margin:20px auto;font-family:Poppins,sans-serif;border-radius:20px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,.12)">
+                <div style="background:linear-gradient(135deg,#047857,#064e3b);padding:32px 24px;text-align:center">
+                    <div style="font-size:48px;margin-bottom:12px">🏅</div>
+                    <h2 style="color:#fff;font-size:22px;font-weight:900;letter-spacing:2px;margin:0">MODULE RESULT</h2>
+                    <p style="color:#a7f3d0;font-size:11px;font-weight:700;letter-spacing:3px;margin:6px 0 0">JORC Digital Literacy LMS</p></div>
+                <div style="padding:24px;text-align:center;background:#fff">
+                    <p style="color:#9ca3af;font-size:10px;font-weight:700;text-transform:uppercase;margin:0 0 4px">Student</p>
+                    <h3 style="font-size:20px;font-weight:900;color:#111827;margin:0 0 8px">${name}</h3>
+                    <p style="color:#047857;font-family:monospace;font-size:15px;font-weight:700;background:#ecfdf5;display:inline-block;padding:3px 12px;border-radius:8px;margin-bottom:20px">${code}</p>
+                    <div style="display:flex;gap:12px;margin-bottom:20px">
+                        <div style="flex:1;background:#f9fafb;padding:12px;border-radius:10px;border:1px solid #e5e7eb">
+                            <p style="color:#9ca3af;font-size:9px;font-weight:700;text-transform:uppercase;margin:0 0 3px">Module</p>
+                            <p style="font-size:13px;font-weight:900;color:#111827;margin:0">${week}</p></div>
+                        <div style="flex:1;background:#f9fafb;padding:12px;border-radius:10px;border:1px solid #e5e7eb">
+                            <p style="color:#9ca3af;font-size:9px;font-weight:700;text-transform:uppercase;margin:0 0 3px">Status</p>
+                            <p style="font-size:13px;font-weight:900;color:${passed?'#16a34a':'#dc2626'};margin:0">${status}</p></div></div>
+                    <div style="width:110px;height:110px;border-radius:50%;border:7px solid #047857;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 20px;background:#fff">
+                        <span style="color:${passed?'#047857':'#ef4444'};font-size:40px;font-weight:900;line-height:1">${score}</span>
+                        <span style="color:#9ca3af;font-size:15px;font-weight:700">${maxStr}</span></div>
+                    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:10px 16px;color:#4b5563;font-size:13px;margin-bottom:20px">${msg}</div>
+                    <p style="color:#d1d5db;font-size:10px">JORC Digital Literacy LMS — Issued: ${new Date().toLocaleDateString()}</p></div></div>`;
+
+        } else {
+            const name  = document.getElementById('trans-name').innerText;
+            const code  = document.getElementById('trans-code').innerText;
+            const date  = document.getElementById('trans-date').innerText;
+            const total = document.getElementById('trans-total').innerText;
+            const grade = document.getElementById('trans-grade').innerText;
+            const rows  = [...document.getElementById('trans-table-body').querySelectorAll('tr')].map(tr => {
+                const cells = [...tr.querySelectorAll('td')];
+                if (cells.length < 3) return '';
+                const sv = parseFloat(cells[1].innerText), mv = parseFloat(cells[2].innerText);
+                const ok = !isNaN(sv) && !isNaN(mv) && sv >= mv*0.7;
+                return `<tr style="border-bottom:1px solid #f3f4f6">
+                    <td style="padding:10px 14px;font-weight:600;color:#111827;font-size:13px">${cells[0].innerText}</td>
+                    <td style="padding:10px 14px;text-align:center;font-weight:900;font-size:16px;color:${ok?'#047857':'#ef4444'}">${cells[1].innerText}</td>
+                    <td style="padding:10px 14px;text-align:center;font-weight:600;color:#9ca3af;font-size:13px">${cells[2].innerText}</td></tr>`;
+            }).join('');
+
+            body = `<div style="max-width:680px;margin:20px auto;font-family:Poppins,sans-serif;padding:48px;box-sizing:border-box;border:10px double #e5e7eb;background:#fff">
+                <div style="text-align:center;margin-bottom:32px">
+                    <div style="display:inline-flex;align-items:center;justify-content:center;width:80px;height:80px;border-radius:50%;margin-bottom:14px;overflow:hidden;border:4px solid #047857;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+                        <img src="https://i.postimg.cc/brTF1zfC/Gemini_Generated_Image_nx1nhknx1nhknx1n.png" alt="Logo" style="width:100%;height:100%;object-fit:cover;">
+                    </div>
+                    <h1 style="color:#111827;font-size:24px;font-weight:900;text-transform:uppercase;letter-spacing:6px;margin:0 0 6px">Official Transcript</h1>
+                    <p style="color:#047857;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:3px;margin:0">JORC Digital Literacy LMS — Computer Basics for Beginners</p>
+                    <div style="width:72px;height:3px;background:#047857;border-radius:4px;margin:14px auto 0"></div></div>
+                <div style="display:flex;justify-content:space-between;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:18px 24px;margin-bottom:24px">
+                    <div><p style="color:#9ca3af;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px">Student Name</p>
+                    <p style="color:#111827;font-size:18px;font-weight:900;margin:0">${name}</p></div>
+                    <div style="text-align:right"><p style="color:#9ca3af;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px">Student ID</p>
+                    <p style="color:#047857;font-family:monospace;font-size:16px;font-weight:700;margin:0">${code}</p></div></div>
+                <table style="width:100%;border-collapse:collapse;margin-bottom:24px;border:1px solid #e5e7eb;overflow:hidden">
+                    <thead><tr style="background:#1f2937">
+                        <th style="padding:11px 14px;text-align:left;color:#fff;font-size:9px;text-transform:uppercase;letter-spacing:2px">Module</th>
+                        <th style="padding:11px 14px;text-align:center;color:#fff;font-size:9px;text-transform:uppercase;letter-spacing:2px">Score</th>
+                        <th style="padding:11px 14px;text-align:center;color:#fff;font-size:9px;text-transform:uppercase;letter-spacing:2px">Max</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                    <tfoot><tr style="background:#d1fae5;border-top:4px solid #047857">
+                        <td style="padding:12px 14px;text-align:right;font-weight:700;font-size:10px;text-transform:uppercase;color:#065f46">Final Total Score:</td>
+                        <td style="padding:12px 14px;text-align:center;font-size:20px;font-weight:900;color:#047857">${total}</td>
+                        <td style="padding:12px 14px;text-align:center;font-size:14px;font-weight:600;color:#6b7280">100</td></tr></tfoot></table>
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:40px;padding-top:20px;border-top:1px solid #f3f4f6">
+                    <div style="width:170px;text-align:center"><div style="border-bottom:2px solid #9ca3af;height:36px;margin-bottom:8px"></div>
+                    <p style="color:#9ca3af;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:2px">Instructor Signature</p></div>
+                    <div style="text-align:center"><div style="width:100px;height:100px;border-radius:50%;border:4px solid #f59e0b;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto">
+                        <span style="font-size:8px;font-weight:900;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:2px">Grade</span>
+                        <span style="font-size:44px;font-weight:900;color:#111827;line-height:1">${grade}</span></div></div>
+                    <div style="width:170px;text-align:center"><div style="border-bottom:2px solid #9ca3af;height:36px;margin-bottom:8px;display:flex;align-items:flex-end;justify-content:center;font-family:monospace;font-size:12px;color:#374151;padding-bottom:3px">${date}</div>
+                    <p style="color:#9ca3af;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:2px">Date Issued</p></div></div>
+                <div style="margin-top:28px;text-align:center;border-top:1px solid #f3f4f6;padding-top:14px">
+                    <p style="color:#d1d5db;font-size:9px">&copy; 2026 Jonah Otunla Resource Centre. All Rights Reserved.</p></div></div>`;
+        }
+
+        const pw = window.open('','_blank','width=900,height=750');
+        pw.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${fn}</title>
+            <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+            <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#e5e7eb;padding:20px;font-family:Poppins,sans-serif}
+            @media print{body{background:#fff!important;padding:0}@page{margin:0;size:A4 portrait}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>
+        </head><body>${body}</body></html>`);
+        pw.document.close();
+        setTimeout(() => { pw.focus(); pw.print(); }, 900);
+    };
+
+    </script>
+</body>
+</html>
