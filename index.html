@@ -156,26 +156,45 @@
             scrollbar-width: thin;
         }
 
-        /* MOBILE RESPONSIVE FIXES */
+        /* MOBILE RESPONSIVE FIXES (Reorganized Header) */
         @media (max-width: 767px) {
             header {
-                flex-direction: row !important;
-                flex-wrap: wrap !important;
-                padding: 10px 14px !important;
-                gap: 8px !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                padding: 12px 16px !important;
+                gap: 12px !important;
                 margin-top: 8px !important;
-                border-radius: 14px !important;
+                border-radius: 16px !important;
             }
-            header > div:first-child { gap: 10px !important; }
+            header > div:first-child { 
+                justify-content: center !important; 
+                gap: 12px !important;
+                width: 100%;
+            }
+            header > div:first-child > div.flex-col {
+                align-items: center !important;
+                text-align: center !important;
+            }
             .logo-ring-wrap { width: 44px !important; height: 44px !important; flex-shrink: 0; }
-            header h1 { font-size: 13px !important; line-height: 1.2 !important; }
-            header p[data-i18n="app_subtitle"] { font-size: 10px !important; }
-            header > div:last-child { gap: 6px !important; }
-            #lang-selector { font-size: 11px !important; padding: 5px 10px 5px 26px !important; }
-            #user-display { padding: 4px 8px !important; gap: 6px !important; }
-            #user-display button { padding: 5px 8px !important; font-size: 11px !important; }
-            #header-username { font-size: 11px !important; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            main { padding-top: 100px !important; padding-left: 12px !important; padding-right: 12px !important; }
+            header h1 { font-size: 15px !important; line-height: 1.2 !important; }
+            header p[data-i18n="app_subtitle"] { font-size: 11px !important; margin-top: 2px; }
+            
+            header > div:last-child { 
+                width: 100% !important; 
+                justify-content: center !important; 
+                gap: 8px !important;
+            }
+            body.is-logged-in header > div:last-child {
+                justify-content: space-between !important;
+            }
+
+            #lang-selector { font-size: 12px !important; padding: 6px 12px 6px 28px !important; flex-shrink: 0; }
+            #user-display { padding: 6px 10px !important; gap: 8px !important; flex-grow: 1; justify-content: flex-end; }
+            #user-display button { padding: 6px 10px !important; font-size: 12px !important; }
+            #header-username { font-size: 12px !important; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            
+            main { padding-top: 140px !important; padding-left: 12px !important; padding-right: 12px !important; }
+            
             #login-screen { margin-top: 8px !important; border-radius: 20px !important; }
             #login-screen > div.p-10 { padding: 24px 20px !important; }
             #login-screen h2 { font-size: 22px !important; }
@@ -232,10 +251,9 @@
             footer { font-size: 11px !important; padding: 16px 12px !important; }
         }
         @media (max-width: 380px) {
-            header h1 { font-size: 11px !important; }
-            header > div:first-child { gap: 6px !important; }
+            header h1 { font-size: 13px !important; }
             #header-username { display: none !important; }
-            main { padding-top: 90px !important; }
+            main { padding-top: 130px !important; }
         }
 
         /* Rotating border effect around the new logo image */
@@ -295,7 +313,7 @@
 <body class="text-gray-800 font-sans flex flex-col items-center">
 
     <header class="glass-header text-white shadow-xl rounded-2xl w-full max-w-7xl mx-auto mt-4 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 fixed z-50 transition-all">
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 w-full md:w-auto">
             <div class="logo-ring-wrap">
                 <div class="logo-inner">
                     <img src="https://i.postimg.cc/brTF1zfC/Gemini_Generated_Image_nx1nhknx1nhknx1n.png" alt="JORC Logo">
@@ -307,7 +325,7 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 w-full md:w-auto justify-between">
             <div class="relative">
                 <i class="fa-solid fa-globe absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-dark text-sm"></i>
                 <select id="lang-selector" onchange="window.changeLanguage(this.value)" class="text-brand-dark font-semibold text-sm rounded-lg pl-8 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-light cursor-pointer bg-white shadow-sm border-0 appearance-none">
@@ -456,9 +474,13 @@
                     <button onclick="window.closeEditModal()" class="text-gray-400 hover:text-red-500 transition bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm hover:shadow"><i class="fa-solid fa-times"></i></button>
                 </div>
                 <form id="admin-edit-form" onsubmit="window.saveStudentEdit(event)" class="p-8">
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wide">Student Name</label>
+                        <input id="edit-name" type="text" class="border-2 border-gray-200 rounded-xl w-full py-2 px-4 font-medium focus:outline-none focus:border-brand" required>
+                    </div>
                     <div class="mb-6">
-                        <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Student Name</label>
-                        <input id="edit-name" type="text" class="border-2 border-gray-200 rounded-xl w-full py-3 px-4 font-medium focus:outline-none focus:border-brand" required>
+                        <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wide">Student ID Code</label>
+                        <input id="edit-code" type="text" class="border-2 border-gray-200 rounded-xl w-full py-2 px-4 font-mono font-bold text-brand focus:outline-none focus:border-brand uppercase" required>
                     </div>
                     <div class="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-5 rounded-2xl border border-gray-100">
                         <div>
@@ -736,8 +758,9 @@
             excellent:'Outstanding! Your progress has been saved to Supabase.',
             retake:'Not quite. Please review the material and try again.',
             submit_capstone:'Week 5 is the Final Capstone (50 Marks). Only proceed if instructed by your administrator.',
-            start_assessment:'Begin Module', retake_btn:'Try Again',
-            completed_btn:'MASTERED', locked_btn:'LOCKED'
+            start_assessment:'Begin Module', 
+            completed_action: 'Completed', passed_badge: 'PASSED', failed_badge: 'FAILED',
+            locked_btn:'LOCKED'
         },
         fr:{
             app_title:'JORC LMS Alphabétisation', app_subtitle:"Bases de l'informatique",
@@ -757,8 +780,9 @@
             week_3_title:'Word & Excel', week_4_title:"Intro à l'IA", week_5_title:'Projet Final',
             excellent:'Exceptionnel! Progrès sauvegardés.', retake:'Veuillez réessayer.',
             submit_capstone:'Projet Final (50 pts). Ne continuez que sur instruction.',
-            start_assessment:'Commencer', retake_btn:'Réessayer',
-            completed_btn:'MAÎTRISÉ', locked_btn:'VERROUILLÉ'
+            start_assessment:'Commencer', 
+            completed_action: 'Terminé', passed_badge: 'RÉUSSI', failed_badge: 'ÉCHOUÉ',
+            locked_btn:'VERROUILLÉ'
         },
         yo:{
             app_title:'JORC LMS Imọ-ẹrọ Kọmputa', app_subtitle:'Awọn ipilẹ fun Awọn olubere',
@@ -777,8 +801,9 @@
             week_3_title:'Titẹ Iwe & Iṣiro', week_4_title:'Ifihan si AI', week_5_title:'Iṣẹ Aṣekan',
             excellent:'O ṣe daadaa! A ti fipamọ.', retake:'Jọwọ tun ṣe.',
             submit_capstone:'Iṣẹ Aṣekan (Ami 50). Tẹsiwaju ti olukọ ba paṣẹ.',
-            start_assessment:'Bẹrẹ', retake_btn:'Tun ṣe',
-            completed_btn:'TI PARI', locked_btn:'TITI PA'
+            start_assessment:'Bẹrẹ', 
+            completed_action: 'Ti Pari', passed_badge: 'O YEGE', failed_badge: 'O KUNA',
+            locked_btn:'TITI PA'
         }
     };
 
@@ -1106,6 +1131,7 @@
         else        { ckDel('jorc_name'); ckDel('jorc_code'); }
 
         if (code === 'ADMINKEY') {
+            document.body.classList.add('is-logged-in');
             localStorage.setItem('jorc_active_session_code', 'ADMINKEY');
             localStorage.setItem('jorc_active_session_name', 'Administrator');
             hide('login-screen'); show('admin-screen'); show('user-display');
@@ -1155,6 +1181,7 @@
 
     window.logout = function() {
         G.user = null;
+        document.body.classList.remove('is-logged-in');
         localStorage.removeItem('jorc_active_session_code');
         localStorage.removeItem('jorc_active_session_name');
         
@@ -1174,6 +1201,7 @@
     // 8. DASHBOARD
     // ═══════════════════════════════════════════════════════════════
     function loadDashboard() {
+        document.body.classList.add('is-logged-in');
         ['login-screen','assessment-screen','result-overlay'].forEach(hide);
         show('dashboard-screen'); show('user-display');
         txt('header-username', G.user.name);
@@ -1196,16 +1224,24 @@
             const prevOk = wk.id === 1 || wp(wk.id - 1).taken;
             const locked = !prevOk;
             const max    = wk.id === 5 ? 50 : 10;
+            const isTaken = p.taken;
 
-            let badge, btnTxt, btnCls;
+            let badge, btnTxt, btnCls, btnAttr = '';
+            
             if (locked) {
                 badge  = '<span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-gray-100 text-gray-400">'+tr.locked_btn+'</span>';
                 btnTxt = '<i class="fa-solid fa-lock mr-2"></i>'+tr.locked_btn;
                 btnCls = 'bg-gray-200 text-gray-400 cursor-not-allowed';
-            } else if (p.passed) {
-                badge  = '<span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-green-100 text-green-700">'+tr.completed_btn+' '+p.score+'/'+max+'</span>';
-                btnTxt = '<i class="fa-solid fa-rotate-right mr-2"></i>'+tr.retake_btn;
-                btnCls = 'bg-brand hover:bg-brand-dark text-white shadow-lg';
+                btnAttr = 'disabled';
+            } else if (isTaken) {
+                if (p.passed) {
+                    badge  = '<span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-green-100 text-green-700">'+(tr.passed_badge || 'PASSED')+' '+p.score+'/'+max+'</span>';
+                } else {
+                    badge  = '<span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-red-100 text-red-700">'+(tr.failed_badge || 'FAILED')+' '+p.score+'/'+max+'</span>';
+                }
+                btnTxt = '<i class="fa-solid fa-check-double mr-2"></i>' + (tr.completed_action || 'Completed');
+                btnCls = 'bg-gray-200 text-gray-500 cursor-not-allowed';
+                btnAttr = 'disabled';
             } else {
                 badge  = '<span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-blue-100 text-blue-700">Available</span>';
                 btnTxt = '<i class="fa-solid fa-play mr-2"></i>'+tr.start_assessment;
@@ -1213,7 +1249,7 @@
             }
 
             grid.innerHTML += `
-                <div class="glass-panel rounded-[2rem] overflow-hidden border-t-4 border-brand flex flex-col min-h-[320px] ${locked ? 'opacity-60 grayscale' : 'hover:scale-[1.01] transition-transform'}">
+                <div class="glass-panel rounded-[2rem] overflow-hidden border-t-4 border-brand flex flex-col min-h-[320px] ${(locked || isTaken) ? 'opacity-70 grayscale-[30%]' : 'hover:scale-[1.01] transition-transform'}">
                     <div class="bg-gradient-to-br ${COLORS[wk.id-1]} p-6 flex items-center justify-between">
                         <span class="text-4xl">${ICONS[wk.id-1]}</span>
                         <span class="text-6xl font-black text-white opacity-20">0${wk.id}</span>
@@ -1224,7 +1260,7 @@
                             ${badge}
                         </div>
                         <p class="text-gray-500 text-sm mb-6 flex-grow">${wk.goal}</p>
-                        <button onclick="window.startWeek(${wk.id})" ${locked?'disabled':''}
+                        <button onclick="window.startWeek(${wk.id})" ${btnAttr}
                             class="w-full font-bold py-4 rounded-xl transition-all ${btnCls}">${btnTxt}</button>
                     </div>
                 </div>`;
@@ -1234,18 +1270,40 @@
     window.changeLanguage = function(lang) {
         G.lang = lang;
         const tr = t();
+        
+        // Translate hardcoded interface elements
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const k = el.getAttribute('data-i18n');
             if (tr[k]) el.innerText = tr[k];
         });
-        if (!document.getElementById('dashboard-screen').classList.contains('hidden'))  renderCards();
-        if (!document.getElementById('assessment-screen').classList.contains('hidden')) renderWizard();
+        
+        // Re-render currently visible components to pull localized data
+        if (!document.getElementById('dashboard-screen').classList.contains('hidden')) {
+            renderCards();
+        }
+        
+        if (!document.getElementById('assessment-screen').classList.contains('hidden')) {
+            // Update the quiz title and goal manually
+            const wid = parseInt(document.getElementById('quiz-title').dataset.wid);
+            const localizedWk = getWeeks().find(w => w.id === wid);
+            if (localizedWk) {
+                document.getElementById('quiz-title').innerText = tr[localizedWk.titleKey];
+                document.getElementById('quiz-goal').innerText = localizedWk.goal;
+            }
+            renderWizard();
+        }
     };
 
     // ═══════════════════════════════════════════════════════════════
     // 9. ASSESSMENT WIZARD
     // ═══════════════════════════════════════════════════════════════
     window.startWeek = function(id) {
+        const p = wp(id);
+        if (p.taken) {
+            alert('You have already completed this module. Multiple attempts are not allowed.');
+            return;
+        }
+
         const wk = getWeeks().find(w => w.id === id);
         const tr = t();
 
@@ -1366,7 +1424,8 @@
         wk.tasks.forEach((_, i) => { if (G.wizard.tasks[i]) score++; });
 
         const max    = wk.questions.length + wk.tasks.length;
-        const passed = score >= Math.ceil(max * 0.7);
+        // Pass Mark Updated to 50%
+        const passed = score >= Math.ceil(max * 0.5);
 
         G.user.progress[String(wid)] = { score, passed, taken:true };
         serverSave();
@@ -1380,7 +1439,8 @@
     function showResult(wid, score, max) {
         const wk     = getWeeks().find(w => w.id === wid);
         const tr     = t();
-        const passed = score >= Math.ceil(max * 0.7);
+        // Pass Mark Updated to 50%
+        const passed = score >= Math.ceil(max * 0.5);
 
         if (passed) confetti({ particleCount:150, spread:70, origin:{y:0.6}, colors:['#10b981','#047857','#ffffff'] });
 
@@ -1389,7 +1449,7 @@
         txt('res-week',    tr[wk.titleKey]);
         txt('res-score',   score);
         txt('res-max',     '/ ' + max);
-        txt('res-status',  passed ? 'PASSED ✓' : 'RETAKE NEEDED');
+        txt('res-status',  passed ? (tr.passed_badge || 'PASSED ✓') : (tr.failed_badge || 'FAILED ✗'));
         txt('res-message', passed ? tr.excellent : tr.retake);
         document.getElementById('res-status').className = passed
             ? 'font-extrabold text-green-600 text-sm'
@@ -1505,11 +1565,12 @@
         const s = G.admin[code];
         if (!s) { alert('Record not found. Click Refresh first.'); return; }
         document.getElementById('edit-name').value = s.name || '';
+        document.getElementById('edit-code').value = s.code || '';
         [1,2,3,4,5].forEach(n => {
             const w = (s.progress || {})[String(n)] || {};
             document.getElementById('edit-w'+n).value = w.taken ? w.score : '';
         });
-        document.getElementById('admin-edit-form').dataset.code = code;
+        document.getElementById('admin-edit-form').dataset.origCode = code;
         show('admin-edit-modal');
     };
 
@@ -1517,34 +1578,58 @@
 
     window.saveStudentEdit = async function(e) {
         e.preventDefault();
-        const code = e.target.dataset.code;
-        const s    = G.admin[code];
+        const origCode = e.target.dataset.origCode;
+        const newCode = document.getElementById('edit-code').value.trim().toUpperCase();
+        const s = G.admin[origCode];
+        
         if (!s) { alert('Record missing — refresh and try again.'); return; }
+        if (!newCode) { alert('Student ID cannot be empty.'); return; }
+        if (newCode === 'ADMINKEY') { alert('This code is reserved for administrators.'); return; }
 
         const btn  = e.target.querySelector('button[type="submit"]');
         const orig = btn.innerHTML;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...';
         btn.disabled  = true;
 
-        s.name = document.getElementById('edit-name').value.trim();
-        if (!s.progress) s.progress = {};
+        const newName = document.getElementById('edit-name').value.trim();
+        let newProgress = {};
 
         [[1,10],[2,10],[3,10],[4,10],[5,50]].forEach(([n,mx]) => {
             const val = document.getElementById('edit-w'+n).value;
             const key = String(n);
             if (val === '') {
-                s.progress[key] = {score:0, passed:false, taken:false};
+                newProgress[key] = {score:0, passed:false, taken:false};
             } else {
                 const sc = Math.max(0, Math.min(parseInt(val)||0, mx));
-                s.progress[key] = {score:sc, passed: sc >= mx*0.7, taken:true};
+                // Pass Mark Updated to 50%
+                newProgress[key] = {score:sc, passed: sc >= Math.ceil(mx*0.5), taken:true};
             }
         });
 
         try {
-            const { error } = await db
-                .from('students')
-                .upsert({ code: s.code, name: s.name, created_at: s.created_at, progress: s.progress }, { onConflict: 'code' });
-            if (error) throw new Error(error.message);
+            if (origCode !== newCode) {
+                // Changing the Primary Key: Check if new code is taken
+                const { data: existing } = await db.from('students').select('code').eq('code', newCode).maybeSingle();
+                if (existing) {
+                    throw new Error('Another student is already using the ID code: ' + newCode);
+                }
+                
+                // Update record and primary key
+                const { error } = await db
+                    .from('students')
+                    .update({ code: newCode, name: newName, progress: newProgress })
+                    .eq('code', origCode);
+                
+                if (error) throw new Error(error.message);
+            } else {
+                // Just update the existing record
+                const { error } = await db
+                    .from('students')
+                    .update({ name: newName, progress: newProgress })
+                    .eq('code', origCode);
+                if (error) throw new Error(error.message);
+            }
+            
             hide('admin-edit-modal');
             window.refreshAdmin();
         } catch(err) {
@@ -1638,7 +1723,7 @@
             const maxStr = document.getElementById('res-max').innerText.replace('/','').trim();
             const status = document.getElementById('res-status').innerText;
             const msg    = document.getElementById('res-message').innerText;
-            const passed = status.includes('PASSED') || status.includes('MAÎTRISÉ') || status.includes('TI PARI');
+            const passed = status.includes('PASSED') || status.includes('MAÎTRISÉ') || status.includes('TI PARI') || status.includes('YEGE');
 
             body = `<div style="max-width:420px;margin:20px auto;font-family:Poppins,sans-serif;border-radius:20px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,.12)">
                 <div style="background:linear-gradient(135deg,#047857,#064e3b);padding:32px 24px;text-align:center">
@@ -1672,7 +1757,8 @@
                 const cells = [...tr.querySelectorAll('td')];
                 if (cells.length < 3) return '';
                 const sv = parseFloat(cells[1].innerText), mv = parseFloat(cells[2].innerText);
-                const ok = !isNaN(sv) && !isNaN(mv) && sv >= mv*0.7;
+                // Pass Mark Updated to 50%
+                const ok = !isNaN(sv) && !isNaN(mv) && sv >= mv*0.5;
                 return `<tr style="border-bottom:1px solid #f3f4f6">
                     <td style="padding:10px 14px;font-weight:600;color:#111827;font-size:13px">${cells[0].innerText}</td>
                     <td style="padding:10px 14px;text-align:center;font-weight:900;font-size:16px;color:${ok?'#047857':'#ef4444'}">${cells[1].innerText}</td>
