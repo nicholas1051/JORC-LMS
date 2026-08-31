@@ -4,6 +4,13 @@
     // 8. DASHBOARD
     // ═══════════════════════════════════════════════════════════════
     function loadDashboard() {
+        if (sessionExpired()) {
+            // Idle for too long: end the session and return to login
+            alert('Your session has expired due to inactivity. Please log in again.');
+            window.logout();
+            return;
+        }
+        touchSession();
         document.body.classList.add('is-logged-in');
         ['login-screen','assessment-screen','result-overlay'].forEach(hide);
         show('dashboard-screen'); show('user-display');

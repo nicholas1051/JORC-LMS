@@ -61,6 +61,44 @@
     }
     function ckDel(n) { document.cookie = n+'=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/'; }
 
+    // ─── Security helpers ─────────────────────────────────────────
+    // Escape untrusted text before inserting into HTML
+    function escapeHTML(str) {
+        return String(str == null ? '' : str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    // Sanitize a student name: letters, digits, spaces, and basic punctuation only
+    function sanitizeName(str) {
+        return String(str || '').replace(/[^A-Za-z0-9À-ÿ .'\-]/g, '').trim().slice(0, 80);
+    }
+
+    // Sanitize a student code: uppercase letters and digits only
+    function sanitizeCode(str) {
+        return String(str || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 30);
+    }
+
+    // ─── Session idle lockout ─────────────────────────────────────
+    const IDLE_LIMIT_MS = 15 * 60 * 1000; // 15 minutes of inactivity
+    function touchSession() {
+        if (!G.user) return;
+        localStorage.setItem('jorc_session_last_active', String(Date.now()));
+    }
+    function sessionExpired() {
+        if (!G.user) return false;
+        const last = parseInt(localStorage.getItem('jorc_session_last_active') || '', 10);
+        if (!last) return false;
+        return Date.now() - last > IDLE_LIMIT_MS;
+    }
+    // Mark activity on user interactions
+    ['click', 'keydown', 'touchstart', 'mousemove', 'scroll'].forEach(evt => {
+        document.addEventListener(evt, touchSession, { passive: true });
+    });
+
     (function() {
         const cn = ckGet('jorc_name'), cc = ckGet('jorc_code');
         if (cn && cc) {
