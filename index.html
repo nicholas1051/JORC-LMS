@@ -765,15 +765,6 @@
         </div>
 
         <div id="dashboard-screen" class="hidden fade-in">
-            <nav class="flex items-center gap-2 text-sm text-gray-500 font-medium mb-4" aria-label="Breadcrumb">
-                <a href="#" onclick="window.logout(); return false;" class="hover:text-brand transition inline-flex items-center gap-1">
-                    <i class="fa-solid fa-house text-xs"></i> Home
-                </a>
-                <i class="fa-solid fa-chevron-right text-[10px] text-gray-300"></i>
-                <span class="text-gray-700 font-bold text-brand inline-flex items-center gap-1">
-                    <i class="fa-solid fa-graduation-cap text-xs"></i> My Learning Path
-                </span>
-            </nav>
             <div id="transcript-banner" class="hidden bg-gradient-to-r from-yellow-400 to-yellow-500 p-1 rounded-2xl shadow-lg mb-10 transform transition hover:scale-[1.01]">
                 <div class="bg-white rounded-xl p-5 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div class="flex items-center gap-5">
@@ -801,17 +792,6 @@
         </div>
 
         <div id="assessment-screen" class="hidden max-w-4xl mx-auto glass-panel rounded-3xl shadow-soft border border-white fade-in overflow-hidden relative">
-            <div class="bg-white px-8 pt-4 border-b border-gray-100 relative z-10">
-                <nav class="flex items-center gap-2 text-xs text-gray-500 font-medium" aria-label="Breadcrumb">
-                    <a href="#" onclick="window.loadDashboard(); return false;" class="hover:text-brand transition inline-flex items-center gap-1">
-                        <i class="fa-solid fa-house text-xs"></i> My Learning Path
-                    </a>
-                    <i class="fa-solid fa-chevron-right text-[10px] text-gray-300"></i>
-                    <button onclick="window.loadDashboard()" class="hover:text-brand transition inline-flex items-center gap-1">
-                        <i class="fa-solid fa-laptop text-xs"></i> <span id="quiz-breadcrumb-title">Assessment</span>
-                    </button>
-                </nav>
-            </div>
             <div class="bg-white p-8 border-b border-gray-100 flex flex-wrap justify-between items-center relative z-10 gap-2">
                 <div class="flex items-center gap-5">
                     <div class="bg-brand-light p-4 rounded-2xl border border-white shadow-sm">
@@ -1699,7 +1679,6 @@
             if (localizedWk) {
                 document.getElementById('quiz-title').innerText = tr[localizedWk.titleKey];
                 document.getElementById('quiz-goal').innerText = localizedWk.goal;
-                document.getElementById('quiz-breadcrumb-title').innerText = tr[localizedWk.titleKey];
             }
             renderWizard();
         }
@@ -1732,7 +1711,6 @@
         document.getElementById('quiz-title').dataset.wid = id;
         txt('quiz-title', tr[wk.titleKey]);
         txt('quiz-goal',  wk.goal);
-        txt('quiz-breadcrumb-title', tr[wk.titleKey]);
 
         const qIdx = shuffle(wk.questions.map((_,i) => i));
         const oIdx = {};
