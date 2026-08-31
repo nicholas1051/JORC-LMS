@@ -782,6 +782,42 @@
                 </div>
             </div>
 
+            <!-- Gamification: stats / badges / leaderboard -->
+            <div class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4" id="gami-stats">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center"><i class="fa-solid fa-star text-amber-500 text-xl"></i></div>
+                    <div><p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Points</p><p class="text-2xl font-black text-gray-800 leading-none" id="gami-points">0</p></div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center"><i class="fa-solid fa-fire text-orange-500 text-xl"></i></div>
+                    <div><p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Day Streak</p><p class="text-2xl font-black text-gray-800 leading-none" id="gami-streak">0</p></div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center"><i class="fa-solid fa-medal text-purple-500 text-xl"></i></div>
+                    <div><p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Badges</p><p class="text-2xl font-black text-gray-800 leading-none" id="gami-badges">0</p></div>
+                </div>
+            </div>
+
+            <div id="gami-badges-row" class="mb-8 hidden">
+                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3"><i class="fa-solid fa-medal mr-1"></i> Badges Earned</h3>
+                <div class="flex flex-wrap gap-3" id="gami-badges-holder"></div>
+            </div>
+
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest"><i class="fa-solid fa-ranking-star mr-1"></i> Leaderboard</h3>
+                    <button onclick="window.refreshLeaderboard()" class="text-xs font-bold text-brand hover:underline inline-flex items-center gap-1"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-3 bg-slate-50 text-slate-500 text-[11px] font-bold uppercase tracking-wider flex items-center gap-4 px-5">
+                        <span class="w-8 text-center">#</span><span class="flex-1">Student</span><span class="w-16 text-center">Points</span><span class="w-20 text-center hidden sm:block">Modules</span>
+                    </div>
+                    <div id="leaderboard-body" class="divide-y divide-gray-50">
+                        <div class="p-4 px-5 text-sm text-gray-400 italic">Loading leaderboard...</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="mb-10">
                 <h2 class="text-2xl md:text-4xl font-extrabold text-gray-900 tracking-tight mb-2" data-i18n="dashboard_title">My Learning Path</h2>
                 <p class="text-lg text-gray-600 font-medium" data-i18n="dashboard_subtitle">Select a module to begin your assessment.</p>
@@ -1460,6 +1496,9 @@
 
     async function serverSave() {
         if (!G.user) return;
+        updateStreak();
+        const meta = gamiMeta();
+        if (meta) meta.points = totalPoints();
         syncSpin();
         try {
             const payload = {
@@ -1575,6 +1614,7 @@
         txt('header-username', G.user.name);
         if (wp(5).taken) show('transcript-banner');
         else hide('transcript-banner');
+        renderGamification();
         renderCards();
     }
     window.loadDashboard = loadDashboard;
@@ -1896,6 +1936,140 @@
         hide('result-overlay');
         hide('assessment-screen');
         loadDashboard();
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // 10b. GAMIFICATION — points, badges, streaks, leaderboard
+    // ═══════════════════════════════════════════════════════════════
+    const BADGE_DEFS = [
+        { id:'first-step',   icon:'fa-flag-checkered', color:'bg-blue-100 text-blue-600',       label:'First Step',        d:'Complete your first module' },
+        { id:'perfect',      icon:'fa-bullseye',       color:'bg-emerald-100 text-emerald-600', label:'Sharpshooter',      d:'Score 100% on any module' },
+        { id:'halfway',      icon:'fa-route',          color:'bg-violet-100 text-violet-600',   label:'Halfway There',     d:'Complete 3 modules' },
+        { id:'high-achiever',icon:'fa-rocket',         color:'bg-orange-100 text-orange-600',   label:'High Achiever',     d:'Score 80% or more overall' },
+        { id:'certified',    icon:'fa-medal',          color:'bg-yellow-100 text-yellow-600',   label:'Certified',         d:'Pass all 5 modules' }
+    ];
+
+    function gamiMeta() {
+        if (!G.user) return null;
+        if (!G.user.progress._meta) G.user.progress._meta = { points:0, badges:[], streak:0, bestStreak:0, lastActive:'' };
+        return G.user.progress._meta;
+    }
+
+    function todayStr() {
+        const n = new Date();
+        return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0');
+    }
+
+    function maxFor(wid) { return wid === 5 ? 50 : 10; }
+
+    // Compute total points from achieved scores (sum of all scores)
+    function totalPoints() {
+        let sum = 0;
+        [1,2,3,4,5].forEach(n => { const w = (G.user.progress||{})[String(n)]; if (w && w.taken) sum += Number(w.score)||0; });
+        return sum;
+    }
+
+    // Evaluate which badges the user has earned
+    function earnedBadges() {
+        const out = [];
+        let anyTaken = false, perfect = false, takenCount = 0, passedAll = true, scoreSum = 0, scoreCnt = 0;
+        [1,2,3,4,5].forEach(n => {
+            const w = (G.user.progress||{})[String(n)];
+            if (w && w.taken) {
+                anyTaken = true; takenCount++;
+                if (w.score >= maxFor(n)) perfect = true;
+                if (w.passed) { scoreSum += Number(w.score)||0; scoreCnt++; } else { passedAll = false; }
+            }
+        });
+        if (anyTaken) out.push('first-step');
+        if (perfect) out.push('perfect');
+        if (takenCount >= 3) out.push('halfway');
+        const passedMax = scoreSum + (5 - scoreCnt) * 0; // passed scores only
+        const pct = scoreCnt ? (scoreSum / (scoreCnt * 50)) : 0; // rough high-achiever check
+        if (passedAll && takenCount === 5 && pct >= 0.8) out.push('high-achiever');
+        if (passedAll && takenCount === 5) out.push('certified');
+        return out;
+    }
+
+    // Update streak based on last active date
+    function updateStreak() {
+        const meta = gamiMeta();
+        if (!meta) return;
+        const today = todayStr();
+        const last  = meta.lastActive;
+        if (last === today) {
+            // same day, no change
+        } else if (last === '') {
+            meta.streak = 1;
+        } else {
+            const lastD = new Date(last + 'T00:00:00');
+            const yestD = new Date(Date.now() - 864e5);
+            const yest  = yestD.getFullYear() + '-' + String(yestD.getMonth()+1).padStart(2,'0') + '-' + String(yestD.getDate()).padStart(2,'0');
+            meta.streak = (last === yest) ? meta.streak + 1 : 1;
+        }
+        meta.lastActive = today;
+        meta.bestStreak = Math.max(meta.bestStreak || 0, meta.streak);
+    }
+
+    // Refresh points/badges/streak stats on dashboard
+    window.renderGamification = function() {
+        if (!G.user) return;
+        updateStreak();
+        const meta = gamiMeta();
+        const earned = earnedBadges();
+        meta.badges = earned;
+
+        txt('gami-points', totalPoints());
+        txt('gami-streak', meta.streak);
+        txt('gami-badges', earned.length);
+
+        const holder = document.getElementById('gami-badges-holder');
+        const row = document.getElementById('gami-badges-row');
+        if (earned.length) {
+            holder.innerHTML = BADGE_DEFS.filter(b => earned.includes(b.id)).map(b =>
+                '<div title="'+b.d+'" class="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-full pl-2 pr-3 py-1.5 shadow-sm">' +
+                '<span class="w-8 h-8 rounded-full '+b.color+' flex items-center justify-center"><i class="fa-solid '+b.icon+'"></i></span>' +
+                '<span class="text-xs font-bold text-gray-700">'+b.label+'</span></div>').join('');
+            row.classList.remove('hidden');
+        } else {
+            row.classList.add('hidden');
+        }
+
+        window.refreshLeaderboard();
+    };
+
+    // Fetch all students and render top-10 leaderboard by points
+    window.refreshLeaderboard = async function() {
+        const body = document.getElementById('leaderboard-body');
+        try {
+            const { data, error } = await db.from('students').select('*').limit(200);
+            if (error) { body.innerHTML = '<div class="p-4 px-5 text-sm text-red-400 text-center">Could not load leaderboard.</div>'; return; }
+            const list = (data||[]).map(s => fixProgress(s)).map(s => {
+                const meta = s.progress._meta || {};
+                const pt = meta.points != null ? meta.points : (() => {
+                    let sum = 0; [1,2,3,4,5].forEach(n => { const w=s.progress[String(n)]; if(w&&w.taken) sum+=Number(w.score)||0; }); return sum;
+                })();
+                let taken = 0; [1,2,3,4,5].forEach(n => { const w=s.progress[String(n)]; if(w&&w.taken) taken++; });
+                return { name:s.name||'—', code:s.code, points:pt, taken };
+            }).filter(r => r.name !== '—' && r.code !== 'ADMINKEY')
+              .sort((a,b) => b.points - a.points || b.taken - a.taken)
+              .slice(0,10);
+
+            if (!list.length) { body.innerHTML = '<div class="p-4 px-5 text-sm text-gray-400 italic">No students yet. Be the first on the leaderboard!</div>'; return; }
+
+            const myCode = G.user ? G.user.code : null;
+            body.innerHTML = list.map((r,i) => {
+                const medal = i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
+                const mine = myCode === r.code;
+                return '<div class="flex items-center gap-4 px-5 py-3 text-sm '+(mine?'bg-brand bg-opacity-10':'' )+'">' +
+                    '<span class="w-8 text-center font-black text-gray-400 text-base">'+medal+'</span>' +
+                    '<span class="flex-1 font-bold text-gray-800 truncate">'+r.name+(mine?' <span class="text-brand text-xs font-black">(You)</span>':'')+'</span>' +
+                    '<span class="w-16 text-center font-black text-gray-700">'+r.points+'</span>' +
+                    '<span class="w-20 text-center hidden sm:block text-gray-400 font-medium">'+r.taken+'/5</span></div>';
+            }).join('');
+        } catch(e) {
+            body.innerHTML = '<div class="p-4 px-5 text-sm text-red-400 text-center">Leaderboard unavailable.</div>';
+        }
     };
 
     // ═══════════════════════════════════════════════════════════════
