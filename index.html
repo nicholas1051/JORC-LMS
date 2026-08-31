@@ -782,42 +782,6 @@
                 </div>
             </div>
 
-            <!-- Gamification: stats / badges / leaderboard -->
-            <div class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4" id="gami-stats">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center"><i class="fa-solid fa-star text-amber-500 text-xl"></i></div>
-                    <div><p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Points</p><p class="text-2xl font-black text-gray-800 leading-none" id="gami-points">0</p></div>
-                </div>
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center"><i class="fa-solid fa-fire text-orange-500 text-xl"></i></div>
-                    <div><p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Day Streak</p><p class="text-2xl font-black text-gray-800 leading-none" id="gami-streak">0</p></div>
-                </div>
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center"><i class="fa-solid fa-medal text-purple-500 text-xl"></i></div>
-                    <div><p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Badges</p><p class="text-2xl font-black text-gray-800 leading-none" id="gami-badges">0</p></div>
-                </div>
-            </div>
-
-            <div id="gami-badges-row" class="mb-8 hidden">
-                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3"><i class="fa-solid fa-medal mr-1"></i> Badges Earned</h3>
-                <div class="flex flex-wrap gap-3" id="gami-badges-holder"></div>
-            </div>
-
-            <div class="mb-8">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest"><i class="fa-solid fa-ranking-star mr-1"></i> Leaderboard</h3>
-                    <button onclick="window.refreshLeaderboard()" class="text-xs font-bold text-brand hover:underline inline-flex items-center gap-1"><i class="fa-solid fa-rotate"></i> Refresh</button>
-                </div>
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="p-3 bg-slate-50 text-slate-500 text-[11px] font-bold uppercase tracking-wider flex items-center gap-4 px-5">
-                        <span class="w-8 text-center">#</span><span class="flex-1">Student</span><span class="w-16 text-center">Points</span><span class="w-20 text-center hidden sm:block">Modules</span>
-                    </div>
-                    <div id="leaderboard-body" class="divide-y divide-gray-50">
-                        <div class="p-4 px-5 text-sm text-gray-400 italic">Loading leaderboard...</div>
-                    </div>
-                </div>
-            </div>
-
             <div class="mb-10">
                 <h2 class="text-2xl md:text-4xl font-extrabold text-gray-900 tracking-tight mb-2" data-i18n="dashboard_title">My Learning Path</h2>
                 <p class="text-lg text-gray-600 font-medium" data-i18n="dashboard_subtitle">Select a module to begin your assessment.</p>
@@ -921,22 +885,6 @@
                         </div>
                     </div>
                     <div id="res-message" class="text-sm font-medium text-gray-600 mb-4 bg-white py-2 px-3 rounded-xl border border-gray-200">Excellent work!</div>
-                    <div class="mb-4">
-                        <div class="flex justify-center gap-3" data-html2canvas-ignore="true">
-                            <button onclick="window.shareResult('twitter')" class="share-btn twitter bg-gray-100 hover:bg-blue-500 hover:text-white text-gray-600 p-3 rounded-xl transition-all" title="Share on Twitter">
-                                <i class="fa-brands fa-x-twitter text-lg"></i>
-                            </button>
-                            <button onclick="window.shareResult('facebook')" class="share-btn facebook bg-gray-100 hover:bg-blue-600 hover:text-white text-gray-600 p-3 rounded-xl transition-all" title="Share on Facebook">
-                                <i class="fa-brands fa-facebook-f text-lg"></i>
-                            </button>
-                            <button onclick="window.shareResult('whatsapp')" class="share-btn whatsapp bg-gray-100 hover:bg-green-500 hover:text-white text-gray-600 p-3 rounded-xl transition-all" title="Share on WhatsApp">
-                                <i class="fa-brands fa-whatsapp text-lg"></i>
-                            </button>
-                            <button onclick="window.shareResult('linkedin')" class="share-btn linkedin bg-gray-100 hover:bg-blue-700 hover:text-white text-gray-600 p-3 rounded-xl transition-all" title="Share on LinkedIn">
-                                <i class="fa-brands fa-linkedin-in text-lg"></i>
-                            </button>
-                        </div>
-                    </div>
                     <div class="flex gap-2" data-html2canvas-ignore="true">
                         <button onclick="window.printSlip('result-slip')" class="flex-1 bg-gray-900 hover:bg-black text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition text-sm">
                             <i class="fa-solid fa-file-arrow-down"></i> <span data-i18n="download_pdf">Save PDF</span>

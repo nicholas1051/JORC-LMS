@@ -10,7 +10,6 @@
         txt('header-username', G.user.name);
         if (wp(5).taken) show('transcript-banner');
         else hide('transcript-banner');
-        renderGamification();
         renderCards();
     }
     window.loadDashboard = loadDashboard;

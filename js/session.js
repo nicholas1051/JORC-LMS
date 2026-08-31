@@ -21,9 +21,6 @@
 
     async function serverSave() {
         if (!G.user) return;
-        updateStreak();
-        const meta = gamiMeta();
-        if (meta) meta.points = totalPoints();
         syncSpin();
         try {
             const payload = {
