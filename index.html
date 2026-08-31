@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -91,6 +92,162 @@
             0%   { transform: translateY(0px); }
             50%  { transform: translateY(-10px); }
             100% { transform: translateY(0px); }
+        }
+
+        /* Dashboard Card Enhancements */
+        .dashboard-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dashboard-card:hover:not(.card-locked) {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+        }
+        .dashboard-card .card-icon {
+            transition: transform 0.3s ease;
+        }
+        .dashboard-card:hover:not(.card-locked) .card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: #e5e7eb;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .progress-bar-fill.success {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+        .progress-bar-fill.warning {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+        .progress-bar-fill.danger {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        /* Login Screen Enhancements */
+        .login-input {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background-image: linear-gradient(white, white), linear-gradient(90deg, transparent, transparent);
+            background-size: 100% 100%, 0% 100%;
+            background-position: 0 0, 100% 0;
+            background-repeat: no-repeat;
+        }
+        .login-input:focus {
+            border-color: #047857 !important;
+            box-shadow: 0 0 0 4px rgba(4, 120, 87, 0.1), 0 4px 12px rgba(4, 120, 87, 0.15);
+            transform: translateY(-2px);
+            background-size: 100% 100%, 0% 100%;
+        }
+        .login-input::placeholder {
+            color: #9ca3af;
+            transition: opacity 0.3s ease;
+        }
+        .login-input:focus::placeholder {
+            opacity: 0.5;
+        }
+        
+        .login-btn-loading {
+            position: relative;
+            overflow: hidden;
+        }
+        .login-btn-loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: btnShine 1.5s infinite;
+        }
+        @keyframes btnShine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .login-card-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23047857' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Result Screen Enhancements */
+        .score-ring {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+        .score-ring svg {
+            transform: rotate(-90deg);
+        }
+        .score-ring-bg {
+            fill: none;
+            stroke: #e5e7eb;
+            stroke-width: 8;
+        }
+        .score-ring-fill {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .score-ring-fill.passed {
+            stroke: url(#gradient-passed);
+        }
+        .score-ring-fill.failed {
+            stroke: url(#gradient-failed);
+        }
+        
+        .share-btn {
+            transition: all 0.3s ease;
+        }
+        .share-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        .share-btn.twitter:hover { background-color: #1da1f2; }
+        .share-btn.facebook:hover { background-color: #1877f2; }
+        .share-btn.whatsapp:hover { background-color: #25d366; }
+        .share-btn.linkedin:hover { background-color: #0077b5; }
+
+        /* Transcript Enhancements */
+        .transcript-seal {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+        .transcript-seal::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #f59e0b, #d97706, #f59e0b, #d97706, #f59e0b);
+            animation: sealSpin 10s linear infinite;
+        }
+        .transcript-seal::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: white;
+        }
+        .transcript-seal > * {
+            position: relative;
+            z-index: 1;
+        }
+        @keyframes sealSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .qr-code-container {
+            background: white;
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
         }
 
         .option-card input:checked + div {
@@ -353,7 +510,7 @@
 
     <main class="flex-grow w-full max-w-7xl px-4 pt-32 pb-12 relative">
 
-        <div id="login-screen" class="max-w-md mx-auto glass-panel rounded-3xl shadow-soft overflow-hidden mt-12 border-t-4 border-brand fade-in relative">
+        <div id="login-screen" class="max-w-md mx-auto glass-panel rounded-3xl shadow-soft overflow-hidden mt-12 border-t-4 border-brand fade-in relative login-card-pattern">
             <div class="absolute top-0 right-0 -mt-10 -mr-10 w-32 h-32 bg-brand opacity-10 rounded-full blur-2xl"></div>
             <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-blue-500 opacity-10 rounded-full blur-2xl"></div>
             <div class="p-6 md:p-10 relative z-10">
@@ -388,11 +545,11 @@
                 <form id="login-form" onsubmit="window.handleLogin(event)">
                     <div class="mb-5">
                         <label class="block text-gray-700 text-sm font-bold mb-2 uppercase tracking-wider" for="student-name" data-i18n="label_name">Full Name</label>
-                        <input class="w-full bg-white bg-opacity-50 border-2 border-gray-200 rounded-xl py-3 px-4 text-gray-800 font-medium focus:outline-none focus:border-brand focus:bg-white transition-colors" id="student-name" type="text" placeholder="e.g. John Doe" required>
+                        <input class="login-input w-full bg-white bg-opacity-50 border-2 border-gray-200 rounded-xl py-3 px-4 text-gray-800 font-medium focus:outline-none focus:border-brand focus:bg-white transition-colors" id="student-name" type="text" placeholder="e.g. John Doe" required>
                     </div>
                     <div class="mb-8">
                         <label class="block text-gray-700 text-sm font-bold mb-2 uppercase tracking-wider" for="student-code" data-i18n="label_code">Student ID Code</label>
-                        <input class="w-full bg-white bg-opacity-50 border-2 border-gray-200 rounded-xl py-3 px-4 text-gray-800 font-medium focus:outline-none focus:border-brand focus:bg-white transition-colors" id="student-code" type="text" placeholder="e.g. CB101" required>
+                        <input class="login-input w-full bg-white bg-opacity-50 border-2 border-gray-200 rounded-xl py-3 px-4 text-gray-800 font-medium focus:outline-none focus:border-brand focus:bg-white transition-colors" id="student-code" type="text" placeholder="e.g. CB101" required>
                     </div>
                     <div class="flex items-center gap-3 mb-6 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
                         <input type="checkbox" id="remember-me" class="w-5 h-5 text-brand rounded border-gray-300 focus:ring-brand cursor-pointer">
@@ -400,7 +557,7 @@
                             <i class="fa-solid fa-cookie-bite text-amber-500 mr-1"></i> Remember me on this device
                         </label>
                     </div>
-                    <button id="btn-login" class="w-full bg-gradient-to-r from-brand to-brand-gradient1 hover:from-brand-dark hover:to-brand text-white font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-glow transition-all duration-300 transform hover:-translate-y-1 flex justify-center items-center gap-3 text-lg" type="submit">
+                    <button id="btn-login" class="login-btn-loading w-full bg-gradient-to-r from-brand to-brand-gradient1 hover:from-brand-dark hover:to-brand text-white font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-glow transition-all duration-300 transform hover:-translate-y-1 flex justify-center items-center gap-3 text-lg" type="submit">
                         <span data-i18n="btn_start">Start Assessment</span> <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </form>
@@ -607,14 +764,47 @@
                         </div>
                     </div>
                     <div class="flex justify-center mb-3">
-                        <div class="w-24 h-24 rounded-full border-[7px] border-brand flex items-center justify-center shadow-inner bg-white">
-                            <div class="text-center">
-                                <span class="text-4xl font-black text-brand leading-none" id="res-score">8</span>
-                                <span class="text-base font-bold text-gray-400 block -mt-0.5" id="res-max">/ 10</span>
+                        <div class="score-ring">
+                            <svg width="120" height="120" viewBox="0 0 120 120">
+                                <defs>
+                                    <linearGradient id="gradient-passed" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#10b981"/>
+                                        <stop offset="100%" stop-color="#059669"/>
+                                    </linearGradient>
+                                    <linearGradient id="gradient-failed" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#ef4444"/>
+                                        <stop offset="100%" stop-color="#dc2626"/>
+                                    </linearGradient>
+                                </defs>
+                                <circle class="score-ring-bg" cx="60" cy="60" r="52"/>
+                                <circle id="score-ring-circle" class="score-ring-fill" cx="60" cy="60" r="52" 
+                                    stroke-dasharray="326.73" stroke-dashoffset="326.73"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="text-center">
+                                    <span class="text-4xl font-black text-brand leading-none" id="res-score">8</span>
+                                    <span class="text-base font-bold text-gray-400 block -mt-0.5" id="res-max">/ 10</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div id="res-message" class="text-sm font-medium text-gray-600 mb-4 bg-white py-2 px-3 rounded-xl border border-gray-200">Excellent work!</div>
+                    <div class="mb-4">
+                        <div class="flex justify-center gap-3" data-html2canvas-ignore="true">
+                            <button onclick="window.shareResult('twitter')" class="share-btn twitter bg-gray-100 hover:bg-blue-500 hover:text-white text-gray-600 p-3 rounded-xl transition-all" title="Share on Twitter">
+                                <i class="fa-brands fa-x-twitter text-lg"></i>
+                            </button>
+                            <button onclick="window.shareResult('facebook')" class="share-btn facebook bg-gray-100 hover:bg-blue-600 hover:text-white text-gray-600 p-3 rounded-xl transition-all" title="Share on Facebook">
+                                <i class="fa-brands fa-facebook-f text-lg"></i>
+                            </button>
+                            <button onclick="window.shareResult('whatsapp')" class="share-btn whatsapp bg-gray-100 hover:bg-green-500 hover:text-white text-gray-600 p-3 rounded-xl transition-all" title="Share on WhatsApp">
+                                <i class="fa-brands fa-whatsapp text-lg"></i>
+                            </button>
+                            <button onclick="window.shareResult('linkedin')" class="share-btn linkedin bg-gray-100 hover:bg-blue-700 hover:text-white text-gray-600 p-3 rounded-xl transition-all" title="Share on LinkedIn">
+                                <i class="fa-brands fa-linkedin-in text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div class="flex gap-2" data-html2canvas-ignore="true">
                         <button onclick="window.printSlip('result-slip')" class="flex-1 bg-gray-900 hover:bg-black text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition text-sm">
                             <i class="fa-solid fa-file-arrow-down"></i> <span data-i18n="download_pdf">Save PDF</span>
@@ -634,14 +824,19 @@
                         <div class="inline-flex items-center justify-center mb-6 shadow-lg rounded-full overflow-hidden border-4 border-brand bg-white" style="width: 100px; height: 100px;">
                             <img src="https://jonahotunlarc.com/email-assets/logo.png" class="w-full h-full object-cover" alt="JORC Logo">
                         </div>
-                        <h1 class="text-2xl md:text-4xl font-black text-gray-900 uppercase tracking-[0.1em] md:tracking-[0.2em]" data-i18n="transcript_title">Official Transcript</h1>
-                        <p class="text-brand font-bold mt-2 tracking-widest uppercase text-sm">JORC Digital Literacy LMS &mdash; Computer Basics for Beginners</p>
-                        <div class="w-32 h-1 bg-brand mx-auto mt-6 rounded-full"></div>
+                        <h1 class="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-[0.12em] md:tracking-[0.15em] relative inline-block">
+                            Official Transcript
+                            <span class="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-full h-0.5 bg-gradient-to-r from-transparent via-brand to-transparent"></span>
+                        </h1>
+                        <p class="text-brand font-bold mt-5 tracking-widest uppercase text-sm">JORC Digital Literacy LMS &mdash; Computer Basics for Beginners</p>
                     </div>
-                    <div class="flex flex-col sm:flex-row justify-between items-center mb-10 bg-gray-50 p-6 border border-gray-200 rounded-xl gap-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-10 bg-gray-50 p-6 border border-gray-200 rounded-xl gap-4 relative">
                         <div class="text-center sm:text-left w-full sm:w-auto border-b sm:border-b-0 border-gray-200 pb-4 sm:pb-0">
                             <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Student Name</p>
                             <p id="trans-name" class="text-2xl font-extrabold text-gray-900">John Doe</p>
+                        </div>
+                        <div class="qr-code-container absolute top-4 right-4 hidden md:block">
+                            <canvas id="transcript-qr" width="80" height="80"></canvas>
                         </div>
                         <div class="text-center sm:text-right w-full sm:w-auto">
                             <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Student ID</p>
@@ -668,19 +863,28 @@
                     <div class="flex-grow"></div>
                     <div class="flex flex-col md:flex-row justify-between items-center md:items-end mt-8 pb-4 gap-6">
                         <div class="text-center w-full md:w-1/3">
-                            <div class="border-b-2 border-gray-400 w-full mb-2 h-10"></div>
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Instructor Signature</p>
+                            <div class="border-b-2 border-gray-400 w-full mb-2 h-10 flex items-end justify-center pb-1">
+                                <span class="font-serif italic text-2xl text-gray-500" style="font-family: 'Brush Script MT', cursive;">J. Otunla</span>
+                            </div>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Instructor Signature &amp; Official Seal</p>
                         </div>
                         <div class="w-full md:w-1/3 flex justify-center">
-                            <div class="border-4 border-yellow-500 bg-white rounded-full h-32 w-32 flex flex-col items-center justify-center font-bold shadow-lg">
-                                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Final Grade</span>
-                                <span id="trans-grade" class="text-5xl font-black text-gray-800 leading-none">A</span>
+                            <div class="transcript-seal flex items-center justify-center rounded-full overflow-hidden">
+                                <div class="bg-white rounded-full border-4 border-yellow-500 h-full w-full flex flex-col items-center justify-center font-bold">
+                                    <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Final Grade</span>
+                                    <span id="trans-grade" class="text-5xl font-black text-gray-800 leading-none">A</span>
+                                    <span class="text-[7px] font-bold text-brand mt-1 uppercase tracking-wider">Official</span>
+                                </div>
                             </div>
                         </div>
                         <div class="text-center w-full md:w-1/3">
                             <div id="trans-date" class="border-b-2 border-gray-400 w-full mb-2 text-gray-800 font-mono text-sm pb-1 h-8 flex items-end justify-center"></div>
                             <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Date Issued</p>
                         </div>
+                    </div>
+                    <div class="mt-4 text-left text-[10px] text-gray-400 border-t border-gray-100 pt-4">
+                        <p class="mb-1"><span class="font-bold">Verification ID:</span> <span id="trans-verification-id" class="font-mono">—</span></p>
+                        <p>This transcript is digitally generated. Verify authenticity at jonahotunlarc.com/verify using the Verification ID or QR code.</p>
                     </div>
                 </div>
                 <div class="mt-6 flex flex-col md:flex-row justify-center gap-4 px-4 md:px-0 pb-6" data-html2canvas-ignore="true">
@@ -1218,6 +1422,7 @@
         const ICONS  = ['🖥️','🌐','📝','🤖','🏆'];
         const COLORS = ['from-emerald-500 to-teal-600','from-blue-500 to-indigo-600',
                         'from-violet-500 to-purple-600','from-orange-500 to-amber-600','from-yellow-500 to-yellow-600'];
+        const ICON_BG = ['bg-emerald-100','bg-blue-100','bg-violet-100','bg-orange-100','bg-yellow-100'];
 
         getWeeks().forEach(wk => {
             const p      = wp(wk.id);
@@ -1227,6 +1432,8 @@
             const isTaken = p.taken;
 
             let badge, btnTxt, btnCls, btnAttr = '';
+            let progressClass = '';
+            let progressWidth = 0;
             
             if (locked) {
                 badge  = '<span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-gray-100 text-gray-400">'+tr.locked_btn+'</span>';
@@ -1236,8 +1443,12 @@
             } else if (isTaken) {
                 if (p.passed) {
                     badge  = '<span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-green-100 text-green-700">'+(tr.passed_badge || 'PASSED')+' '+p.score+'/'+max+'</span>';
+                    progressClass = 'success';
+                    progressWidth = 100;
                 } else {
                     badge  = '<span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-red-100 text-red-700">'+(tr.failed_badge || 'FAILED')+' '+p.score+'/'+max+'</span>';
+                    progressClass = 'danger';
+                    progressWidth = (p.score / max) * 100;
                 }
                 btnTxt = '<i class="fa-solid fa-check-double mr-2"></i>' + (tr.completed_action || 'Completed');
                 btnCls = 'bg-gray-200 text-gray-500 cursor-not-allowed';
@@ -1246,12 +1457,18 @@
                 badge  = '<span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-blue-100 text-blue-700">Available</span>';
                 btnTxt = '<i class="fa-solid fa-play mr-2"></i>'+tr.start_assessment;
                 btnCls = 'bg-brand hover:bg-brand-dark text-white shadow-lg';
+                progressClass = 'warning';
+                progressWidth = 0;
             }
 
+            const cardLocked = (locked || isTaken) ? 'card-locked opacity-70 grayscale-[30%]' : '';
+            
             grid.innerHTML += `
-                <div class="glass-panel rounded-[2rem] overflow-hidden border-t-4 border-brand flex flex-col min-h-[320px] ${(locked || isTaken) ? 'opacity-70 grayscale-[30%]' : 'hover:scale-[1.01] transition-transform'}">
+                <div class="dashboard-card glass-panel rounded-[2rem] overflow-hidden border-t-4 border-brand flex flex-col min-h-[320px] ${cardLocked}">
                     <div class="bg-gradient-to-br ${COLORS[wk.id-1]} p-6 flex items-center justify-between">
-                        <span class="text-4xl">${ICONS[wk.id-1]}</span>
+                        <div class="card-icon w-14 h-14 ${ICON_BG[wk.id-1]} rounded-2xl flex items-center justify-center shadow-lg">
+                            <span class="text-3xl">${ICONS[wk.id-1]}</span>
+                        </div>
                         <span class="text-6xl font-black text-white opacity-20">0${wk.id}</span>
                     </div>
                     <div class="p-6 flex flex-col flex-grow">
@@ -1259,7 +1476,16 @@
                             <h3 class="text-lg font-bold text-gray-800 leading-tight flex-grow mr-2">${tr[wk.titleKey]}</h3>
                             ${badge}
                         </div>
-                        <p class="text-gray-500 text-sm mb-6 flex-grow">${wk.goal}</p>
+                        <p class="text-gray-500 text-sm mb-4 flex-grow">${wk.goal}</p>
+                        <div class="mb-4">
+                            <div class="flex justify-between text-xs font-bold text-gray-500 mb-2">
+                                <span>Progress</span>
+                                <span>${isTaken ? p.score + '/' + max : '0/' + max}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill ${progressClass}" style="width: ${progressWidth}%"></div>
+                            </div>
+                        </div>
                         <button onclick="window.startWeek(${wk.id})" ${btnAttr}
                             class="w-full font-bold py-4 rounded-xl transition-all ${btnCls}">${btnTxt}</button>
                     </div>
@@ -1455,8 +1681,52 @@
             ? 'font-extrabold text-green-600 text-sm'
             : 'font-extrabold text-red-600 text-sm';
 
+        // Animate score ring
+        const circle = document.getElementById('score-ring-circle');
+        const circumference = 2 * Math.PI * 52; // radius = 52
+        const offset = circumference - (score / max) * circumference;
+        circle.style.strokeDasharray = circumference;
+        circle.classList.remove('passed', 'failed');
+        circle.classList.add(passed ? 'passed' : 'failed');
+        
+        // Animate after a short delay
+        setTimeout(() => {
+            circle.style.strokeDashoffset = offset;
+        }, 100);
+
         show('result-overlay');
     }
+
+    window.shareResult = function(platform) {
+        const name = document.getElementById('res-name').innerText;
+        const week = document.getElementById('res-week').innerText;
+        const score = document.getElementById('res-score').innerText;
+        const max = document.getElementById('res-max').innerText.replace('/', '').trim();
+        const status = document.getElementById('res-status').innerText;
+        
+        const text = `🎉 I just completed ${week} on JORC Digital Literacy LMS!\n\nScore: ${score}/${max}\nStatus: ${status}\n\n#JORC #DigitalLiteracy #Learning`;
+        const url = window.location.href;
+        
+        let shareUrl;
+        switch(platform) {
+            case 'twitter':
+                shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+                break;
+            case 'facebook':
+                shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
+                break;
+            case 'whatsapp':
+                shareUrl = `https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}`;
+                break;
+            case 'linkedin':
+                shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&summary=${encodeURIComponent(text)}`;
+                break;
+        }
+        
+        if (shareUrl) {
+            window.open(shareUrl, '_blank', 'width=600,height=400');
+        }
+    };
 
     window.closeResult = function() {
         hide('result-overlay');
@@ -1489,6 +1759,28 @@
         document.getElementById('trans-table-body').innerHTML = rows;
         txt('trans-total', total);
         txt('trans-grade', total>=90?'A+':total>=80?'A':total>=70?'B':total>=60?'C':total>=50?'D':'F');
+
+        // Generate Verification ID (deterministic per student + timestamp to keep stable within session)
+        const grade = total>=90?'A+':total>=80?'A':total>=70?'B':total>=60?'C':total>=50?'D':'F';
+        const verifyId = 'JORC-' + G.user.code + '-' + total + '-' + grade + '-' + new Date().toISOString().slice(0,10).replace(/-/g,'');
+        txt('trans-verification-id', verifyId);
+
+        // Generate QR Code containing verification data
+        const qrCanvas = document.getElementById('transcript-qr');
+        if (qrCanvas && window.QRCode) {
+            qrCanvas.getContext('2d').clearRect(0, 0, qrCanvas.width, qrCanvas.height);
+            try {
+                new QRCode(qrCanvas, {
+                    text: verifyId + '|' + G.user.name + '|' + total + '/100',
+                    width: 84,
+                    height: 84,
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            } catch(e) {
+                console.error('QR Generation failed:', e);
+            }
+        }
+
         show('transcript-overlay');
     };
     window.closeTranscript = function() { hide('transcript-overlay'); };
@@ -1765,10 +2057,11 @@
                     <td style="padding:10px 14px;text-align:center;font-weight:600;color:#9ca3af;font-size:13px">${cells[2].innerText}</td></tr>`;
             }).join('');
 
+            const verifyId = (document.getElementById('trans-verification-id')||{}).innerText || 'JORC';
             body = `<div style="max-width:680px;margin:20px auto;font-family:Poppins,sans-serif;padding:48px;box-sizing:border-box;border:10px double #e5e7eb;background:#fff">
                 <div style="text-align:center;margin-bottom:32px">
                     <div style="display:inline-flex;align-items:center;justify-content:center;width:80px;height:80px;border-radius:50%;margin-bottom:14px;overflow:hidden;border:4px solid #047857;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.1);">
-                        <img src="https://i.postimg.cc/brTF1zfC/Gemini_Generated_Image_nx1nhknx1nhknx1n.png" alt="Logo" style="width:100%;height:100%;object-fit:cover;">
+                        <img src="https://jonahotunlarc.com/email-assets/logo.png" alt="Logo" style="width:100%;height:100%;object-fit:cover;">
                     </div>
                     <h1 style="color:#111827;font-size:24px;font-weight:900;text-transform:uppercase;letter-spacing:6px;margin:0 0 6px">Official Transcript</h1>
                     <p style="color:#047857;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:3px;margin:0">JORC Digital Literacy LMS — Computer Basics for Beginners</p>
@@ -1789,7 +2082,7 @@
                         <td style="padding:12px 14px;text-align:center;font-size:20px;font-weight:900;color:#047857">${total}</td>
                         <td style="padding:12px 14px;text-align:center;font-size:14px;font-weight:600;color:#6b7280">100</td></tr></tfoot></table>
                 <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:40px;padding-top:20px;border-top:1px solid #f3f4f6">
-                    <div style="width:170px;text-align:center"><div style="border-bottom:2px solid #9ca3af;height:36px;margin-bottom:8px"></div>
+                    <div style="width:170px;text-align:center"><div style="border-bottom:2px solid #9ca3af;height:36px;margin-bottom:8px;display:flex;align-items:flex-end;justify-content:center;font-family:'Brush Script MT',cursive;font-size:22px;color:#6b7280">J. Otunla</div>
                     <p style="color:#9ca3af;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:2px">Instructor Signature</p></div>
                     <div style="text-align:center"><div style="width:100px;height:100px;border-radius:50%;border:4px solid #f59e0b;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto">
                         <span style="font-size:8px;font-weight:900;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:2px">Grade</span>
@@ -1797,6 +2090,7 @@
                     <div style="width:170px;text-align:center"><div style="border-bottom:2px solid #9ca3af;height:36px;margin-bottom:8px;display:flex;align-items:flex-end;justify-content:center;font-family:monospace;font-size:12px;color:#374151;padding-bottom:3px">${date}</div>
                     <p style="color:#9ca3af;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:2px">Date Issued</p></div></div>
                 <div style="margin-top:28px;text-align:center;border-top:1px solid #f3f4f6;padding-top:14px">
+                    <p style="color:#9ca3af;font-size:8px;font-weight:700">Verification ID: <span style="font-family:monospace">${verifyId}</span></p>
                     <p style="color:#d1d5db;font-size:9px">&copy; 2026 Jonah Otunla Resource Centre. All Rights Reserved.</p></div></div>`;
         }
 
