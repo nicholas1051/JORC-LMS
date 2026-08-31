@@ -648,8 +648,48 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Admin Stats Overview (Charts) -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200" id="admin-stats">
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-users text-blue-600" aria-hidden="true"></i></div>
+                        <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Students</p><p class="text-xl font-black text-gray-800 leading-none" id="stat-total">0</p></div>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-graduation-cap text-green-600" aria-hidden="true"></i></div>
+                        <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Graduates</p><p class="text-xl font-black text-gray-800 leading-none" id="stat-graduates">0</p></div>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-check text-green-600" aria-hidden="true"></i></div>
+                        <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Avg Score</p><p class="text-xl font-black text-gray-800 leading-none" id="stat-avg">0</p></div>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-flag-checkered text-purple-600" aria-hidden="true"></i></div>
+                        <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Completion Rate</p><p class="text-xl font-black text-gray-800 leading-none" id="stat-rate">0%</p></div>
+                    </div>
+                </div>
+
+                <!-- Search & Filter Toolbar -->
+                <div class="px-6 py-4 bg-white border-b border-gray-200 flex flex-col md:flex-row gap-3 md:items-center">
+                    <div class="relative flex-1 min-w-[200px]">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" aria-hidden="true"></i>
+                        <input id="admin-search" type="text" placeholder="Search by name or code..." oninput="window.filterAdmin()" class="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-11 pr-4 text-sm font-medium focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition" aria-label="Search students">
+                    </div>
+                    <div class="flex gap-3 items-center">
+                        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider sr-only" for="admin-status-filter">Status</label>
+                        <select id="admin-status-filter" onchange="window.filterAdmin()" class="bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm font-medium focus:outline-none focus:border-brand cursor-pointer" aria-label="Filter by status">
+                            <option value="all">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="graduate">Graduate</option>
+                        </select>
+                        <button onclick="window.bulkDelete()" class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-5 py-3 text-sm font-bold shadow transition inline-flex items-center gap-2" title="Delete selected students">
+                            <i class="fa-solid fa-trash" aria-hidden="true"></i> <span class="hidden sm:inline">Delete Selected</span>
+                        </button>
+                    </div>
+                </div>
+
                 <div class="overflow-x-auto bg-white bg-opacity-50">
-                    <table class="w-full text-left border-collapse" aria-label="Student progress table">
+                    <table class="w-full text-left border-collapse" aria-label="Student progress table" id="admin-table">
                         <thead>
                             <tr class="bg-gray-50 text-gray-500 uppercase text-xs tracking-wider border-b-2 border-gray-200">
                                 <th scope="col" class="p-5 w-12 text-center">
@@ -1482,6 +1522,8 @@
             localStorage.setItem('jorc_active_session_name', 'Administrator');
             hide('login-screen'); show('admin-screen'); show('user-display');
             txt('header-username', 'Administrator');
+            if (document.getElementById('admin-search')) document.getElementById('admin-search').value = '';
+            if (document.getElementById('admin-status-filter')) document.getElementById('admin-status-filter').value = 'all';
             window.refreshAdmin();
             return;
         }
@@ -1955,6 +1997,7 @@
             }
 
             list.forEach(s => { G.admin[s.code] = s; });
+            G.adminList = list;
 
             const getBadge = (s, n) => {
                 const p = s.progress || {};
@@ -1964,12 +2007,29 @@
                 return '<span class="' + cls + ' px-2 py-1 rounded-lg font-bold text-sm">' + w.score + '</span>';
             };
 
-            tbody.innerHTML = list.map(s => {
+            // Compute stats overview
+            const totalStudents = list.length;
+            let graduates = 0, scoreSum = 0, scoreCount = 0, completions = 0;
+            list.forEach(s => {
                 const done = [1,2,3,4,5].every(n => { const p=s.progress||{}; const w=p[String(n)]; return w&&w.taken; });
+                if (done) graduates++;
+                let takenCnt = 0;
+                [1,2,3,4,5].forEach(n => { const w=(s.progress||{})[String(n)]; if(w&&w.taken){ takenCnt++; scoreSum+=Number(w.score)||0; scoreCount++; } });
+                if (takenCnt > 0) completions += takenCnt / 5;
+            });
+            document.getElementById('stat-total').innerText = totalStudents;
+            document.getElementById('stat-graduates').innerText = graduates;
+            document.getElementById('stat-avg').innerText = scoreCount ? (scoreSum/scoreCount).toFixed(1) : '0';
+            document.getElementById('stat-rate').innerText = totalStudents ? Math.round((completions/totalStudents)*100) + '%' : '0%';
+
+            const isGraduate = (s) => [1,2,3,4,5].every(n => { const p=s.progress||{}; const w=p[String(n)]; return w&&w.taken; });
+
+            tbody.innerHTML = list.map(s => {
+                const done = isGraduate(s);
                 const status = done
                     ? '<span class="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full">GRADUATE</span>'
                     : '<span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">ACTIVE</span>';
-                return `<tr class="border-b border-gray-100 hover:bg-brand hover:bg-opacity-5 transition-colors">
+                return `<tr class="border-b border-gray-100 hover:bg-brand hover:bg-opacity-5 transition-colors admin-row" data-status="${done?'graduate':'active'}" data-name="${(s.name||'').toLowerCase()}" data-code="${(s.code||'').toLowerCase()}">
                     <td class="p-4 text-center"><input type="checkbox" class="student-checkbox w-5 h-5 text-brand rounded border-gray-300 cursor-pointer" value="${s.code}"></td>
                     <td class="p-4 font-bold text-gray-800">${s.name||'—'}</td>
                     <td class="p-4"><span class="font-mono text-gray-500 bg-gray-50 rounded px-2 py-1">${s.code}</span></td>
@@ -1981,9 +2041,9 @@
                     <td class="p-4 text-center">${status}</td>
                     <td class="p-4 text-center">
                         <div class="flex justify-center gap-2">
-                            <button onclick="window.editStudent('${s.code}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white p-2 rounded-lg transition" title="Edit">
+                            <button onclick="window.editStudent('${s.code}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white p-2 rounded-lg transition" title="Edit" aria-label="Edit ${s.name||s.code}">
                                 <i class="fa-solid fa-pen"></i></button>
-                            <button onclick="window.deleteStudent('${s.code}')" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white p-2 rounded-lg transition" title="Delete">
+                            <button onclick="window.deleteStudent('${s.code}')" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white p-2 rounded-lg transition" title="Delete" aria-label="Delete ${s.name||s.code}">
                                 <i class="fa-solid fa-trash"></i></button>
                         </div></td></tr>`;
             }).join('');
@@ -2091,6 +2151,38 @@
 
     window.toggleSelectAll = function(src) {
         document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = src.checked);
+    };
+
+    // Admin search & filter
+    window.filterAdmin = function() {
+        const q = (document.getElementById('admin-search').value || '').toLowerCase().trim();
+        const status = document.getElementById('admin-status-filter').value;
+        document.querySelectorAll('.admin-row').forEach(row => {
+            let show = true;
+            if (status !== 'all' && row.dataset.status !== status) show = false;
+            if (show && q) {
+                const hay = (row.dataset.name + ' ' + row.dataset.code);
+                if (!hay.includes(q)) show = false;
+            }
+            row.style.display = show ? '' : 'none';
+        });
+    };
+
+    // Bulk delete selected students
+    window.bulkDelete = async function() {
+        const checks = [...document.querySelectorAll('.student-checkbox:checked')];
+        if (!checks.length) { alert('Select at least one student to delete.'); return; }
+        const codes = checks.map(cb => cb.value);
+        if (!confirm(`Permanently delete ${codes.length} selected student(s)?\n\nThis cannot be undone.`)) return;
+        try {
+            for (const code of codes) {
+                await db.from('students').delete().eq('code', code);
+                delete G.admin[code];
+            }
+            window.refreshAdmin();
+        } catch(e) {
+            alert('Bulk delete failed: ' + e.message);
+        }
     };
 
     // ═══════════════════════════════════════════════════════════════
