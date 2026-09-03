@@ -13,6 +13,7 @@
             alert('This module is locked. Complete the previous module(s) or ask your administrator to approve early access.');
             return;
         }
+        stopLiveRefresh();
 
         const wk = getWeeks().find(w => w.id === id);
         const tr = t();

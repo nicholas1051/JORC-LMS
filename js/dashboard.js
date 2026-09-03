@@ -18,8 +18,59 @@
         if (wp(5).taken) show('transcript-banner');
         else hide('transcript-banner');
         renderCards();
+        startLiveRefresh();
     }
     window.loadDashboard = loadDashboard;
+
+    // ── Live refresh: poll the student's record so admin changes
+    //    (e.g. resetting a score to allow a retake) show up automatically.
+    let liveTimer = null;
+    const LIVE_INTERVAL_MS = 10000; // every 10s
+
+    function dashboardVisible() {
+        const el = document.getElementById('dashboard-screen');
+        return G.user && el && !el.classList.contains('hidden');
+    }
+
+    function startLiveRefresh() {
+        stopLiveRefresh();
+        liveTimer = setInterval(async () => {
+            // Only refresh while the student is sitting on the dashboard
+            // (never disrupt an in-progress assessment).
+            if (!dashboardVisible()) return;
+            try {
+                const fresh = await dbLoad(G.user.code);
+                if (!fresh) return;
+                const oldProgress = G.user.progress;
+                const freshProgress = fresh.progress;
+
+                // Only re-render if something actually changed
+                const changed =
+                    JSON.stringify(freshProgress) !== JSON.stringify(oldProgress) ||
+                    fresh.name !== G.user.name;
+
+                if (changed) {
+                    const wasOnTranscript = !document.getElementById('transcript-overlay').classList.contains('hidden');
+                    G.user = fresh;
+                    touchSession();
+                    if (wp(5).taken) show('transcript-banner');
+                    else hide('transcript-banner');
+                    renderCards();
+                    // Re-populate the transcript if it's currently open
+                    if (wasOnTranscript && !document.getElementById('transcript-overlay').classList.contains('hidden')) {
+                        window.showFinalTranscript();
+                    }
+                }
+            } catch (e) {
+                // Silently ignore transient network errors on the polling cycle
+                console.error('[JORC] live refresh error:', e);
+            }
+        }, LIVE_INTERVAL_MS);
+    }
+
+    function stopLiveRefresh() {
+        if (liveTimer) { clearInterval(liveTimer); liveTimer = null; }
+    }
 
     function renderCards() {
         const grid = document.getElementById('week-grid');

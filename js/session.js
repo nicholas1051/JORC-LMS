@@ -140,6 +140,7 @@
     };
 
     window.logout = function() {
+        stopLiveRefresh();
         G.user = null;
         document.body.classList.remove('is-logged-in');
         localStorage.removeItem('jorc_active_session_code');
