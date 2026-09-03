@@ -18,6 +18,16 @@
         return G.user.progress[String(weekNum)] || {score:0,passed:false,taken:false};
     }
 
+    // A week is accessible if it's week 1, the previous week was taken,
+    // or an admin explicitly approved an advance (unlock) for it.
+    function isUnlocked(weekNum) {
+        if (!G.user || !G.user.progress) return weekNum === 1;
+        if (weekNum === 1) return true;
+        if (wp(weekNum - 1).taken) return true;
+        const unlocks = (G.user.progress._unlocks || []);
+        return unlocks.indexOf(weekNum) !== -1;
+    }
+
     function fixProgress(user) {
         if (!user.progress) user.progress = blankProgress();
         for (let i = 1; i <= 5; i++) {

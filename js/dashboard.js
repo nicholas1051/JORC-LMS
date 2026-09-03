@@ -32,7 +32,7 @@
 
         getWeeks().forEach(wk => {
             const p      = wp(wk.id);
-            const prevOk = wk.id === 1 || wp(wk.id - 1).taken;
+            const prevOk = isUnlocked(wk.id);
             const locked = !prevOk;
             const max    = wk.id === 5 ? 50 : 10;
             const isTaken = p.taken;

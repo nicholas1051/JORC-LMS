@@ -9,6 +9,10 @@
             alert('You have already completed this module. Multiple attempts are not allowed.');
             return;
         }
+        if (!isUnlocked(id)) {
+            alert('This module is locked. Complete the previous module(s) or ask your administrator to approve early access.');
+            return;
+        }
 
         const wk = getWeeks().find(w => w.id === id);
         const tr = t();

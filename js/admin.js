@@ -150,6 +150,8 @@
             const w = (s.progress || {})[String(n)] || {};
             document.getElementById('edit-w'+n).value = w.taken ? w.score : '';
         });
+        const unlocks = (s.progress && s.progress._unlocks) || [];
+        document.querySelectorAll('.unlock-check').forEach(cb => { cb.checked = unlocks.indexOf(parseInt(cb.dataset.week)) !== -1; });
         document.getElementById('admin-edit-form').dataset.origCode = code;
         show('admin-edit-modal');
     };
@@ -183,6 +185,17 @@
                 const sc = Math.max(0, Math.min(parseInt(val)||0, mx));
                 // Pass Mark Updated to 50%
                 newProgress[key] = {score:sc, passed: sc >= Math.ceil(mx*0.5), taken:true};
+            }
+        });
+
+        // Collect admin-approved early-access unlocks (weeks 2-5)
+        // Only keep weeks that are NOT yet taken (no point unlocking an already-taken week).
+        newProgress._unlocks = [];
+        document.querySelectorAll('.unlock-check').forEach(cb => {
+            if (!cb.checked) return;
+            const wkNum = parseInt(cb.dataset.week);
+            if (newProgress && newProgress[String(wkNum)] && !newProgress[String(wkNum)].taken) {
+                newProgress._unlocks.push(wkNum);
             }
         });
 
