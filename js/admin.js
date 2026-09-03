@@ -108,11 +108,13 @@
                 const done = isGraduate(s);
                 const eName = escapeHTML(s.name || '—');
                 const eCode = escapeHTML(s.code);
+                // Escape code for safe insertion into single-quoted JS strings inside HTML attributes
+                const jsCode = String(s.code || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                 const status = done
                     ? '<span class="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full">GRADUATE</span>'
                     : '<span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">ACTIVE</span>';
                 return `<tr class="border-b border-gray-100 hover:bg-brand hover:bg-opacity-5 transition-colors admin-row" data-status="${done?'graduate':'active'}" data-name="${(escapeHTML(s.name||'')).toLowerCase()}" data-code="${(escapeHTML(s.code||'')).toLowerCase()}">
-                    <td class="p-4 text-center"><input type="checkbox" class="student-checkbox w-5 h-5 text-brand rounded border-gray-300 cursor-pointer" value="${s.code}"></td>
+                    <td class="p-4 text-center"><input type="checkbox" class="student-checkbox w-5 h-5 text-brand rounded border-gray-300 cursor-pointer" value="${eCode}"></td>
                     <td class="p-4 font-bold text-gray-800">${eName}</td>
                     <td class="p-4"><span class="font-mono text-gray-500 bg-gray-50 rounded px-2 py-1">${eCode}</span></td>
                     <td class="p-4 text-center">${getBadge(s,1)}</td>
@@ -123,9 +125,9 @@
                     <td class="p-4 text-center">${status}</td>
                     <td class="p-4 text-center">
                         <div class="flex justify-center gap-2">
-                            <button onclick="window.editStudent('${s.code}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white p-2 rounded-lg transition" title="Edit" aria-label="Edit ${eName}">
+                            <button onclick="window.editStudent('${jsCode}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white p-2 rounded-lg transition" title="Edit" aria-label="Edit ${eName}">
                                 <i class="fa-solid fa-pen"></i></button>
-                            <button onclick="window.deleteStudent('${s.code}')" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white p-2 rounded-lg transition" title="Delete" aria-label="Delete ${eName}">
+                            <button onclick="window.deleteStudent('${jsCode}')" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white p-2 rounded-lg transition" title="Delete" aria-label="Delete ${eName}">
                                 <i class="fa-solid fa-trash"></i></button>
                         </div></td></tr>`;
             }).join('');
